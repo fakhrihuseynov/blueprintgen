@@ -162,9 +162,9 @@ class LayoutEngine {
             });
         });
         
-        // Calculate positions
-        const layerGap = 200;
-        const nodeGap = 280;
+        // Calculate positions with better spacing
+        const layerGap = 280; // Increased from 200 for better vertical spacing
+        const nodeGap = 320; // Increased from 280 for better horizontal spacing
         
         layers.forEach((layer, layerIdx) => {
             const layerWidth = layer.length * nodeGap;
@@ -182,6 +182,48 @@ class LayoutEngine {
             });
         });
         
+        // Apply collision detection and adjust overlapping nodes
+        this.resolveCollisions(layout);
+        
         return layout;
+    }
+    
+    resolveCollisions(layout) {
+        const nodes = Object.keys(layout);
+        const minDistance = 180; // Minimum distance between node centers (includes label space)
+        const maxIterations = 50;
+        
+        for (let iter = 0; iter < maxIterations; iter++) {
+            let hasCollision = false;
+            
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const node1 = layout[nodes[i]];
+                    const node2 = layout[nodes[j]];
+                    
+                    // Skip containers
+                    if (node1.type === 'container' || node2.type === 'container') continue;
+                    
+                    const dx = node2.x - node1.x;
+                    const dy = node2.y - node1.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < minDistance && distance > 0) {
+                        hasCollision = true;
+                        
+                        // Push nodes apart
+                        const pushForce = (minDistance - distance) / 2;
+                        const angle = Math.atan2(dy, dx);
+                        
+                        node1.x -= Math.cos(angle) * pushForce;
+                        node1.y -= Math.sin(angle) * pushForce;
+                        node2.x += Math.cos(angle) * pushForce;
+                        node2.y += Math.sin(angle) * pushForce;
+                    }
+                }
+            }
+            
+            if (!hasCollision) break;
+        }
     }
 }

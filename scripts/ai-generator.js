@@ -306,241 +306,145 @@ class AIGenerator {
         showToast('success', 'Cleared all markdown files');
     }
 
+    // Resource to icon category mapping
+    getResourceCategory(resourceType) {
+        const mappings = {
+            // AWS mappings
+            'EC2|Instance|Virtual Machine': 'AWS/Compute',
+            'EKS|Kubernetes|K8s': 'AWS/Containers',
+            'ECS|Fargate|Container Service': 'AWS/Containers',
+            'RDS|Database|Aurora|PostgreSQL|MySQL': 'AWS/Database',
+            'DynamoDB|NoSQL': 'AWS/Database',
+            'S3|Bucket|Object Storage': 'AWS/Storage',
+            'VPC|Subnet|Network': 'AWS/Networking-Content-Delivery',
+            'Lambda|Function|Serverless': 'AWS/Compute',
+            'IAM|Role|Policy|Identity|Access': 'AWS/Security-Identity-Compliance',
+            'CloudWatch|Monitoring|Logs': 'AWS/Management-Governance',
+            
+            // Kubernetes mappings
+            'Deployment|Pod|Service|Ingress|ConfigMap|Secret': 'Kubernetes',
+            
+            // Monitoring
+            'Prometheus|Grafana|Fluent': 'Monitoring'
+        };
+        
+        for (const [pattern, category] of Object.entries(mappings)) {
+            const regex = new RegExp(pattern, 'i');
+            if (regex.test(resourceType)) {
+                return category;
+            }
+        }
+        return 'General';
+    }
+
     buildSystemPrompt() {
-        // Group icons by category with their full paths
-        const iconsByCategory = {};
+        // Organize icons by provider and category
+        const iconsByProvider = {
+            AWS: {},
+            Kubernetes: [],
+            Monitoring: [],
+            General: []
+        };
+        
         this.availableIcons.forEach(icon => {
-            const category = icon.category || 'Other';
-            if (!iconsByCategory[category]) {
-                iconsByCategory[category] = [];
+            if (icon.category === 'AWS' && icon.subcategory) {
+                if (!iconsByProvider.AWS[icon.subcategory]) {
+                    iconsByProvider.AWS[icon.subcategory] = [];
+                }
+                iconsByProvider.AWS[icon.subcategory].push(icon);
+            } else if (icon.category === 'Kubernetes') {
+                iconsByProvider.Kubernetes.push(icon);
+            } else if (icon.category === 'Monitoring') {
+                iconsByProvider.Monitoring.push(icon);
+            } else {
+                iconsByProvider.General.push(icon);
             }
-            iconsByCategory[category].push(icon);
         });
 
-        // Build organized icon list with full paths - show MORE icons
-        let iconList = '';
-        Object.keys(iconsByCategory).sort().forEach(category => {
-            iconList += `\n${category}:\n`;
-            const icons = iconsByCategory[category]
-                .filter((icon, index, self) => 
-                    index === self.findIndex(i => i.path === icon.path))
-                .slice(0, 50); // Increased from 30 to 50 per category
+        // Build concise, organized icon reference
+        let iconReference = '';
+        
+        // AWS icons by subcategory
+        iconReference += '\n🔷 AWS ICONS (by service category):\n';
+        Object.keys(iconsByProvider.AWS).sort().forEach(subcat => {
+            const icons = iconsByProvider.AWS[subcat].slice(0, 30);
+            iconReference += `\n  ${subcat}:\n`;
             icons.forEach(icon => {
-                iconList += `  ${icon.name} → ${icon.path}\n`;
+                iconReference += `    • ${icon.name}\n`;
             });
-            if (iconsByCategory[category].length > 50) {
-                iconList += `  ... and ${iconsByCategory[category].length - 50} more\n`;
-            }
+        });
+        
+        // Kubernetes icons
+        iconReference += '\n🔷 KUBERNETES ICONS (use lowercase abbreviations):\n';
+        iconsByProvider.Kubernetes.forEach(icon => {
+            iconReference += `  • ${icon.name}\n`;
+        });
+        
+        // Monitoring icons
+        iconReference += '\n🔷 MONITORING ICONS:\n';
+        iconsByProvider.Monitoring.forEach(icon => {
+            iconReference += `  • ${icon.name}\n`;
         });
 
-        return `You are an expert in generating architecture diagram definitions in JSON format.
+        return `You are an expert cloud architecture diagram generator. Generate JSON definitions from markdown descriptions.
 
-⚠️ CRITICAL RULES - READ CAREFULLY:
-1. You MUST ONLY use paths that appear in the "AVAILABLE ICONS WITH PATHS" list below
-2. DO NOT create or guess icon paths - if you see "svc → ./assets/icons/Kubernetes/svc.svg", use EXACTLY that path
-3. DO NOT capitalize icon names (WRONG: Service.svg, CORRECT: svc.svg)
-4. DO NOT add words to paths (WRONG: Amazon-RDS.svg, CORRECT: RDS.svg)
-5. If an icon doesn't exist in the list, use the closest match or omit the icon field
+PROVIDER-AWARE ICON SELECTION:
+- When you see AWS resources → use icons from AWS/ folder
+- When you see Kubernetes resources → use icons from Kubernetes/ folder  
+- When you see monitoring tools → use icons from Monitoring/ folder
+- Unknown resources → use General/ folder
 
-AVAILABLE ICONS WITH PATHS:
-${iconList}
+AVAILABLE ICONS:
+${iconReference}
 
-⚠️ IMPORTANT KUBERNETES NAMING:
-- Deployment = deploy.svg (NOT Deployment.svg)
-- Service = svc.svg (NOT Service.svg)
-- Pod = pod.svg (NOT Pod.svg)
-- Ingress = ing.svg (NOT Ingress.svg)
-- ConfigMap = cm.svg (NOT ConfigMap.svg)
-- All Kubernetes icons use lowercase abbreviations!
+SMART ICON RULES:
+1. **AWS Resources**: Match service name to icon name
+   - "RDS database" → RDS.svg in AWS/Database/
+   - "EC2 instance" → EC2.svg in AWS/Compute/
+   - "EKS cluster" → Elastic-Kubernetes-Service.svg in AWS/Containers/
+   
+2. **Kubernetes Resources**: Use lowercase abbreviations
+   - "Deployment" → deploy.svg
+   - "Service" → svc.svg
+   - "Pod" → pod.svg
+   - "Ingress" → ing.svg
+   
+3. **IAM/Security**: ALL use Identity-and-Access-Management.svg
+   - IAM Role, Policy, User → AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg
 
-⚠️ IMPORTANT AWS NAMING:
-- RDS database = RDS.svg (NOT Amazon-RDS.svg)
-- VPC = Virtual-Private-Cloud.svg (NOT VPC.svg)
-- S3 = Simple-Storage-Service.svg (NOT S3.svg)
-- Use EXACT names from the list above!
+4. **Networking without specific icons**: Use Virtual-Private-Cloud.svg
+   - Internet Gateway, Subnet, Route Table → AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg
+   
+5. **Generic Resources**: Use General/ folder
+   - Security Group → General/Res_Firewall_48_Light.svg
+   - Generic server → General/Res_Server_48_Light.svg
 
-⚠️ MONITORING:
-- Prometheus = ./assets/icons/Monitoring/prometheus.svg (NOT Kubernetes/Prometheus.svg)
-- Grafana = ./assets/icons/Monitoring/grafana.svg
-- FluentBit = ./assets/icons/Monitoring/fluentbit.svg
+ICON PATH FORMAT:
+✅ CORRECT: "./assets/icons/AWS/Compute/EC2.svg"
+✅ CORRECT: "./assets/icons/Kubernetes/deploy.svg"
+❌ WRONG: "./assets/icons/AWS/EC2.svg" (missing category folder)
+❌ WRONG: "./assets/icons/Kubernetes/Deployment.svg" (should be lowercase abbreviation)
 
-🚫 ICONS THAT DO NOT EXIST - DO NOT USE THESE:
-- Internet-Gateway.svg ❌ DOES NOT EXIST
-- Subnet.svg ❌ DOES NOT EXIST
-- Route-Table.svg ❌ DOES NOT EXIST
-- NAT-Gateway.svg ❌ DOES NOT EXIST
-- Security-Group.svg ❌ DOES NOT EXIST
-
-FOR NETWORKING COMPONENTS WITHOUT ICONS:
-- Internet Gateway → Use VPC icon OR omit "icon" field entirely
-- Subnet → Use VPC icon OR omit "icon" field entirely
-- Route Table → Omit "icon" field entirely
-- NAT Gateway → Omit "icon" field entirely
-- Security Group → Use General/Res_Firewall_48_Light.svg OR omit "icon"
-
-ICON FOLDER STRUCTURE:
-AWS icons are organized by service category:
-- AWS/Compute/ - EC2, Lambda, Fargate, Batch, etc.
-- AWS/Containers/ - Elastic-Kubernetes-Service, Elastic-Container-Service, Elastic-Container-Registry, etc.
-- AWS/Database/ - RDS, DynamoDB, Aurora, ElastiCache, etc.
-- AWS/Networking-Content-Delivery/ - VPC, CloudFront, Route-53, Elastic-Load-Balancing, API-Gateway, etc.
-- AWS/Storage/ - Simple-Storage-Service, Elastic-Block-Store, Elastic-File-System, etc.
-- AWS/Security-Identity-Compliance/ - Identity-and-Access-Management, Key-Management-Service, Secrets-Manager, etc.
-- AWS/Analytics/ - Kinesis, Athena, Glue, EMR, etc.
-- AWS/Machine-Learning/ - SageMaker, Bedrock, etc.
-- AWS/Management-Governance/ - CloudWatch, CloudFormation, Systems-Manager, etc.
-- AWS/Developer-Tools/ - CodePipeline, CodeBuild, CodeDeploy, etc.
-
-Kubernetes icons (flat structure with abbreviations):
-- deploy = Deployment, svc = Service, pod = Pod, ing = Ingress
-- cm = ConfigMap, secret = Secret, pv = PersistentVolume, pvc = PersistentVolumeClaim
-- hpa = HorizontalPodAutoscaler, sts = StatefulSet, ds = DaemonSet
-- job = Job, cronjob = CronJob, sa = ServiceAccount, role = Role, rb = RoleBinding
-- crb = ClusterRoleBinding, ns = Namespace, node = Node, rs = ReplicaSet
-- netpol = NetworkPolicy, sc = StorageClass, ep = Endpoints, vol = Volume
-- api = API Server, etcd = etcd, sched = Scheduler, kubelet = Kubelet
-- control-plane = Control Plane, c-m = Controller Manager, k-proxy = Kube Proxy
-
-Monitoring icons (flat): prometheus, grafana, fluentbit
-
-General icons (flat, for generic resources):
-- Res_Server, Res_Database, Res_Generic-Application, Res_Client, Res_User, Res_Users
-- Res_Globe, Res_Internet, Res_Firewall, Res_Shield, Res_SSL-padlock
-- Res_Data-Stream, Res_Data-Table, Res_Logs, Res_Metrics, Res_Alert
-- Res_Document, Res_Documents, Res_Folder, Res_Folders, Res_Git-Repository
-- Res_Source-Code, Res_JSON-Script, Res_Programming-Language, Res_SDK
-- Res_Email, Res_Chat, Res_Forums, Res_Credentials, Res_SAML-token
-- And more generic AWS architecture resource icons
-
-ICON SELECTION GUIDE (USE THESE EXACT PATHS):
-
-⚠️ COPY THESE PATHS EXACTLY - DO NOT MODIFY THEM!
-
-AWS Services (EXACT paths):
-  EKS → "./assets/icons/AWS/Containers/Elastic-Kubernetes-Service.svg"
-  EC2 → "./assets/icons/AWS/Compute/EC2.svg"
-  RDS → "./assets/icons/AWS/Database/RDS.svg"
-  DynamoDB → "./assets/icons/AWS/Database/DynamoDB.svg"
-  VPC → "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg"
-  S3 → "./assets/icons/AWS/Storage/Simple-Storage-Service.svg"
-  Lambda → "./assets/icons/AWS/Compute/Lambda.svg"
-  Load Balancer → "./assets/icons/AWS/Networking-Content-Delivery/Elastic-Load-Balancing.svg"
-
-Kubernetes (EXACT paths - note lowercase):
-  Deployment → "./assets/icons/Kubernetes/deploy.svg"
-  Service → "./assets/icons/Kubernetes/svc.svg"
-  Pod → "./assets/icons/Kubernetes/pod.svg"
-  Ingress → "./assets/icons/Kubernetes/ing.svg"
-  ConfigMap → "./assets/icons/Kubernetes/cm.svg"
-  Secret → "./assets/icons/Kubernetes/secret.svg"
-  Namespace → "./assets/icons/Kubernetes/ns.svg"
-
-Monitoring (EXACT paths):
-  Prometheus → "./assets/icons/Monitoring/prometheus.svg"
-  Grafana → "./assets/icons/Monitoring/grafana.svg"
-  Fluent Bit → "./assets/icons/Monitoring/fluentbit.svg"
-
-Generic (when nothing matches):
-  Server → "./assets/icons/General/Res_Server_48_Light.svg"
-  Database → "./assets/icons/General/Res_Database_48_Light.svg"
-  Internet → "./assets/icons/General/Res_Internet_48_Light.svg"
-
-⚠️ COMMON MISTAKES TO AVOID:
-❌ "./assets/icons/Kubernetes/Service.svg" → ✅ "./assets/icons/Kubernetes/svc.svg"
-❌ "./assets/icons/Kubernetes/Ingress.svg" → ✅ "./assets/icons/Kubernetes/ing.svg"
-❌ "./assets/icons/AWS/Database/Amazon-RDS.svg" → ✅ "./assets/icons/AWS/Database/RDS.svg"
-❌ "./assets/icons/Kubernetes/Prometheus.svg" → ✅ "./assets/icons/Monitoring/prometheus.svg"
-❌ "./assets/icons/AWS/Networking-Content-Delivery/Internet-Gateway.svg" → Use VPC icon or omit
-❌ "./assets/icons/AWS/Networking-Content-Delivery/Subnet.svg" → Use VPC icon or omit
-  * User, person → "./assets/icons/General/Res_User.svg"
-  * Internet, web → "./assets/icons/General/Res_Internet.svg"
-  * Firewall, security → "./assets/icons/General/Res_Firewall.svg"
-  * Logs → "./assets/icons/General/Res_Logs.svg"
-  * Metrics → "./assets/icons/General/Res_Metrics.svg"
-
-JSON STRUCTURE:
-The JSON must have this exact structure:
+JSON OUTPUT FORMAT:
 {
   "nodes": [
-    {
-      "id": "unique-identifier",
-      "label": "Display Name",
-      "subtitle": "module.name or description",
-      "type": "network|compute|container|security|storage|iam",
-      "icon": "./assets/icons/AWS/[Category]/[Service].svg",
-      "parentNode": "optional-container-id"  // Use this to group related resources
-    }
+    {"id": "unique-id", "label": "Display Name", "type": "network|compute|container|security|storage|iam", 
+     "icon": "./assets/icons/[Provider]/[Category]/[Icon].svg", "parentNode": "optional-container-id"}
   ],
-  "edges": [
-    {
-      "id": "e1",
-      "source": "source-node-id",
-      "target": "target-node-id",
-      "label": "relationship description"
-    }
-  ]
+  "edges": [{"id": "e1", "source": "node1", "target": "node2", "label": "relationship"}]
 }
 
-GROUPING RELATED RESOURCES:
-- **Create container nodes** for logical groupings (VPC, Kubernetes namespaces, modules)
-- Container nodes should have type="container" and NO icon
-- Related resources should reference the container via "parentNode"
-- Common containers: VPC, Availability Zones, Namespaces, Security Groups
+GROUPING: Create container nodes (type="container", NO icon) for logical groups. Use "parentNode" to assign resources.
 
-EXAMPLE WITH GROUPING:
-{
-  "nodes": [
-    {"id": "vpc-container", "label": "VPC", "subtitle": "Production Environment", "type": "container"},
-    {"id": "vpc", "label": "VPC", "subtitle": "module.vpc", "type": "network", "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg", "parentNode": "vpc-container"},
-    {"id": "subnet-public", "label": "Public Subnet", "subtitle": "module.vpc", "type": "network", "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg", "parentNode": "vpc-container"},
-    {"id": "eks-container", "label": "EKS Cluster", "subtitle": "Kubernetes", "type": "container"},
-    {"id": "eks", "label": "EKS Control Plane", "subtitle": "module.eks", "type": "container", "icon": "./assets/icons/AWS/Containers/Elastic-Kubernetes-Service.svg", "parentNode": "eks-container"},
-    {"id": "nodegroup", "label": "Node Group", "subtitle": "module.eks", "type": "compute", "icon": "./assets/icons/AWS/Compute/EC2.svg", "parentNode": "eks-container"}
-  ],
-  "edges": [
-    {"id": "e1", "source": "vpc", "target": "subnet-public", "label": "contains"},
-    {"id": "e2", "source": "vpc-container", "target": "eks-container", "label": "contains"}
-  ]
-}
+CRITICAL REMINDERS:
+- AWS: ./assets/icons/AWS/[Category]/[Service].svg
+- Kubernetes: ./assets/icons/Kubernetes/[abbreviation].svg (lowercase: deploy, svc, pod, ing, cm, secret)
+- IAM/Identity: ALL use ./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg
+- Networking (IGW, Subnet, Route Table): Use ./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg
+- Security Group: ./assets/icons/General/Res_Firewall_48_Light.svg
+- Unknown resources: omit icon field or use General/Res_*_48_Light.svg
 
-INSTRUCTIONS:
-1. **FIRST**: Check "AVAILABLE ICONS WITH PATHS" list above for exact icon paths
-2. **ONLY** use icon paths that exist in that list - DO NOT create new paths
-3. Read the markdown description carefully
-4. **Identify logical groups** (VPC resources, EKS components, IAM policies, etc.)
-5. **Create container nodes** for each group with dotted borders
-4. Assign resources to containers using "parentNode"
-5. **CRITICAL**: Use EXACT icon paths from the "AVAILABLE ICONS WITH PATHS" list above
-6. **NEVER use .png extensions** - ALL icons MUST end with .svg
-7. **NEVER create paths like "./assets/icons/vpc.png"** - Use full folder structure like "./assets/icons/AWS/Networking-Content-Delivery/VPC.svg"
-8. Create meaningful IDs (lowercase, hyphenated)
-9. Use types: network, compute, container, security, storage, iam
-10. Define edges showing relationships
-11. Return ONLY valid JSON, no explanations
-
-⚠️ REAL EXAMPLES FROM ACTUAL ERRORS:
-
-WRONG (DO NOT DO THIS):
-❌ "icon": "./assets/icons/Kubernetes/Service.svg"
-❌ "icon": "./assets/icons/Kubernetes/Ingress.svg"
-❌ "icon": "./assets/icons/Kubernetes/Prometheus.svg"
-❌ "icon": "./assets/icons/AWS/Database/Amazon-RDS.svg"
-❌ "icon": "./assets/icons/AWS/Networking-Content-Delivery/Internet-Gateway.svg" (DOES NOT EXIST!)
-❌ "icon": "./assets/icons/AWS/Networking-Content-Delivery/Subnet.svg" (DOES NOT EXIST!)
-❌ "icon": "./assets/icons/AWS/Networking-Content-Delivery/Route-Table.svg" (DOES NOT EXIST!)
-
-CORRECT (DO THIS INSTEAD):
-✅ "icon": "./assets/icons/Kubernetes/svc.svg"
-✅ "icon": "./assets/icons/Kubernetes/ing.svg"
-✅ "icon": "./assets/icons/Monitoring/prometheus.svg"
-✅ "icon": "./assets/icons/AWS/Database/RDS.svg"
-✅ For Internet Gateway: {"id": "igw", "label": "Internet Gateway", "type": "network"} (NO icon field!)
-✅ For Subnet: {"id": "subnet", "label": "Subnet", "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg"}
-✅ For Route Table: {"id": "rt", "label": "Route Table", "type": "network"} (NO icon field!)
-
-🔴 CRITICAL: If an icon doesn't exist in "AVAILABLE ICONS WITH PATHS", OMIT the "icon" field completely!
-
-REMEMBER: Check the "AVAILABLE ICONS WITH PATHS" list at the top. Only use paths that appear in that list!
+Return ONLY valid JSON. No explanations.
 
 USER'S ARCHITECTURE DESCRIPTION:
 `;
@@ -609,6 +513,9 @@ USER'S ARCHITECTURE DESCRIPTION:
             // Parse and validate JSON
             this.generatedJSON = JSON.parse(jsonText);
             
+            // Validate and auto-fix icon paths
+            this.generatedJSON = this.validateAndFixIcons(this.generatedJSON);
+            
             // Display the result
             this.displayGeneratedJSON(this.generatedJSON);
             
@@ -620,6 +527,79 @@ USER'S ARCHITECTURE DESCRIPTION:
         } finally {
             generateBtn.disabled = false;
         }
+    }
+
+    // Runtime validation and auto-fix for icon paths
+    validateAndFixIcons(json) {
+        if (!json.nodes) return json;
+        
+        let fixCount = 0;
+        json.nodes.forEach(node => {
+            if (!node.icon) return;
+            
+            // Check if icon file exists in our loaded icons
+            const iconExists = this.availableIcons.some(icon => 
+                node.icon.includes(icon.name + '.svg')
+            );
+            
+            if (!iconExists) {
+                console.warn(`⚠️  Icon not found: ${node.icon} for "${node.label}"`);
+                
+                // Try to find fallback
+                const fallback = this.findFallbackIcon(node);
+                if (fallback) {
+                    console.log(`   ✅ Using fallback: ${fallback}`);
+                    node.icon = fallback;
+                    fixCount++;
+                } else {
+                    console.log(`   ❌ No fallback found - removing icon field`);
+                    delete node.icon;
+                }
+            }
+        });
+        
+        if (fixCount > 0) {
+            showToast('info', `Auto-fixed ${fixCount} invalid icon path(s)`);
+        }
+        
+        return json;
+    }
+
+    // Smart fallback icon finder
+    findFallbackIcon(node) {
+        const label = (node.label || '').toLowerCase();
+        const type = node.type || '';
+        
+        // IAM/Security/Identity
+        if (/role|policy|iam|identity|access|user|permission/i.test(label)) {
+            return './assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg';
+        }
+        
+        // Networking
+        if (/vpc|subnet|route|gateway|network|internet/i.test(label)) {
+            return './assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg';
+        }
+        
+        // Security Group / Firewall
+        if (/security.group|firewall|sg|acl|nacl/i.test(label)) {
+            const firewall = this.availableIcons.find(i => i.name.includes('Firewall'));
+            return firewall ? firewall.path : './assets/icons/General/Res_Firewall_48_Light.svg';
+        }
+        
+        // Kubernetes resources
+        if (/deployment/i.test(label)) return './assets/icons/Kubernetes/deploy.svg';
+        if (/\bservice\b/i.test(label) && !/^aws/i.test(label)) return './assets/icons/Kubernetes/svc.svg';
+        if (/\bpod\b/i.test(label)) return './assets/icons/Kubernetes/pod.svg';
+        if (/ingress/i.test(label)) return './assets/icons/Kubernetes/ing.svg';
+        if (/configmap/i.test(label)) return './assets/icons/Kubernetes/cm.svg';
+        if (/secret/i.test(label)) return './assets/icons/Kubernetes/secret.svg';
+        
+        // Generic by type
+        if (type === 'compute') return './assets/icons/General/Res_Server_48_Light.svg';
+        if (type === 'database' || type === 'storage') return './assets/icons/General/Res_Database_48_Light.svg';
+        if (type === 'network') return './assets/icons/General/Res_Internet_48_Light.svg';
+        
+        return null;
     }
 
     displayGeneratedJSON(json) {

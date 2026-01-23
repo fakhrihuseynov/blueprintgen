@@ -202,23 +202,40 @@ class DiagramGenerator {
                 y2 = targetPos.y + targetPos.height / 2;
             }
             
-            // Create orthogonal (right-angle) path
+            // Create orthogonal path with curved corners
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d;
+            const curveRadius = 15; // Add rounded corners to reduce harsh angles
             
             if (isTargetBelow || isTargetAbove) {
                 const midY = (y1 + y2) / 2;
                 if (Math.abs(x2 - x1) < 10) {
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    d = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
+                    // Add curves using quadratic bezier
+                    const offsetX = x2 - x1;
+                    const curveOffset = Math.min(Math.abs(offsetX) / 4, curveRadius);
+                    d = `M ${x1} ${y1} 
+                         L ${x1} ${midY - curveOffset}
+                         Q ${x1} ${midY} ${x1 + Math.sign(offsetX) * curveOffset} ${midY}
+                         L ${x2 - Math.sign(offsetX) * curveOffset} ${midY}
+                         Q ${x2} ${midY} ${x2} ${midY + curveOffset}
+                         L ${x2} ${y2}`;
                 }
             } else {
                 const midX = (x1 + x2) / 2;
                 if (Math.abs(y2 - y1) < 10) {
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+                    // Add curves using quadratic bezier
+                    const offsetY = y2 - y1;
+                    const curveOffset = Math.min(Math.abs(offsetY) / 4, curveRadius);
+                    d = `M ${x1} ${y1}
+                         L ${midX - curveOffset} ${y1}
+                         Q ${midX} ${y1} ${midX} ${y1 + Math.sign(offsetY) * curveOffset}
+                         L ${midX} ${y2 - Math.sign(offsetY) * curveOffset}
+                         Q ${midX} ${y2} ${midX + curveOffset} ${y2}
+                         L ${x2} ${y2}`;
                 }
             }
             
