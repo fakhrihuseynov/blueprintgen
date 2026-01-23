@@ -240,12 +240,12 @@ body {
 .edge-path {
     fill: none;
     stroke: var(--primary-color);
-    stroke-width: 2;
+    stroke-width: 1.5;  /* Thinner lines */
     opacity: 0.6;
 }
 
 .edge-group:hover .edge-path {
-    stroke-width: 3;
+    stroke-width: 2;  /* Slightly thicker on hover */
     opacity: 1;
 }
 

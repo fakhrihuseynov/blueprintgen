@@ -46,18 +46,31 @@ class DiagramGenerator {
     }
 
     onMouseDown(e) {
-        // Check if clicking on a node
-        const nodeGroup = e.target.closest('.node-group');
-        if (nodeGroup) {
+        console.log('🖱️ MouseDown:', {
+            target: e.target.tagName,
+            targetClass: e.target.className.baseVal || e.target.className,
+            clientX: e.clientX,
+            clientY: e.clientY
+        });
+        
+        // Since all children have pointer-events: none, only node-group will receive the click
+        const nodeGroup = e.target;
+        
+        if (nodeGroup && nodeGroup.classList && nodeGroup.classList.contains('node-group')) {
             e.preventDefault();
             e.stopPropagation();
+            
+            console.log('✅ Node clicked:', nodeGroup.getAttribute('data-node-id'));  // Debug log
             
             this.isDraggingNode = true;
             this.draggedNode = nodeGroup;
             const nodeId = nodeGroup.getAttribute('data-node-id');
             const pos = this.layout[nodeId];
             
-            if (!pos) return;
+            if (!pos) {
+                console.error('❌ No position found for node:', nodeId);
+                return;
+            }
             
             // Get click position in SVG coordinates
             const pt = this.svg.createSVGPoint();
@@ -71,11 +84,13 @@ class DiagramGenerator {
             };
             
             nodeGroup.style.cursor = 'grabbing';
+            console.log('✅ Drag started at:', this.nodeDragStart, 'isDraggingNode:', this.isDraggingNode);
             return;
         }
         
         // Canvas panning
         if (e.target === this.svg || e.target === this.group) {
+            console.log('🖼️ Canvas panning started');
             this.isDragging = true;
             this.dragStartX = e.clientX - this.translateX;
             this.dragStartY = e.clientY - this.translateY;
@@ -86,6 +101,13 @@ class DiagramGenerator {
     onMouseMove(e) {
         // Handle node dragging
         if (this.isDraggingNode && this.draggedNode) {
+            console.log('🔄 Dragging node...', {
+                isDraggingNode: this.isDraggingNode,
+                hasNode: !!this.draggedNode,
+                clientX: e.clientX,
+                clientY: e.clientY
+            });
+            
             e.preventDefault();
             e.stopPropagation();
             
@@ -95,10 +117,15 @@ class DiagramGenerator {
             const svgPt = pt.matrixTransform(this.svg.getScreenCTM().inverse());
             
             const nodeId = this.draggedNode.getAttribute('data-node-id');
-            if (!this.layout[nodeId]) return;
+            if (!this.layout[nodeId]) {
+                console.error('❌ No layout for dragged node:', nodeId);
+                return;
+            }
             
             const newX = svgPt.x - this.nodeDragStart.x;
             const newY = svgPt.y - this.nodeDragStart.y;
+            
+            console.log('📍 New position:', { newX, newY });
             
             // Update layout
             this.layout[nodeId].x = newX;
@@ -119,6 +146,7 @@ class DiagramGenerator {
 
     onMouseUp() {
         if (this.isDraggingNode) {
+            console.log('✋ Mouse up - ending node drag');
             this.isDraggingNode = false;
             if (this.draggedNode) {
                 this.draggedNode.style.cursor = 'grab';
@@ -127,6 +155,7 @@ class DiagramGenerator {
         }
         
         if (this.isDragging) {
+            console.log('✋ Mouse up - ending canvas drag');
             this.isDragging = false;
             this.svg.style.cursor = 'default';
         }
@@ -488,6 +517,16 @@ class DiagramGenerator {
         g.setAttribute('data-node-id', node.id);
         g.style.cursor = 'grab';  // Add grab cursor for draggable nodes
         
+        // Add a transparent interaction layer that captures all mouse events
+        const interactionRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        interactionRect.setAttribute('x', pos.x - 10);  // Extend beyond visible area
+        interactionRect.setAttribute('y', pos.y - 10);
+        interactionRect.setAttribute('width', pos.width + 20);
+        interactionRect.setAttribute('height', pos.height + 50);  // Cover label area too
+        interactionRect.setAttribute('fill', 'transparent');
+        interactionRect.setAttribute('class', 'node-interaction-layer');
+        g.appendChild(interactionRect);
+        
         // Node rectangle (compact)
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', pos.x);
@@ -496,17 +535,20 @@ class DiagramGenerator {
         rect.setAttribute('height', pos.height);
         rect.setAttribute('rx', 8);
         rect.setAttribute('class', 'node-rect');
+        rect.style.pointerEvents = 'none';  // Allow clicks to pass through to parent group
         g.appendChild(rect);
         
-        // Icon (centered in compact box)
+        // Icon (centered in square frame) - 48px like Available Icons section
         if (node.icon) {
+            const iconSize = 48;  // Match Available Icons section size
             const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            image.setAttribute('x', pos.x + pos.width / 2 - 20);
-            image.setAttribute('y', pos.y + pos.height / 2 - 20);
-            image.setAttribute('width', 40);
-            image.setAttribute('height', 40);
+            image.setAttribute('x', pos.x + (pos.width - iconSize) / 2);
+            image.setAttribute('y', pos.y + (pos.height - iconSize) / 2);
+            image.setAttribute('width', iconSize);
+            image.setAttribute('height', iconSize);
             image.setAttribute('href', node.icon);
             image.setAttribute('class', 'node-icon');
+            image.style.pointerEvents = 'none';  // Allow clicks to pass through to parent group
             g.appendChild(image);
         }
         
@@ -516,6 +558,7 @@ class DiagramGenerator {
         text.setAttribute('y', pos.y + pos.height + 18);
         text.setAttribute('class', 'node-label');
         text.setAttribute('text-anchor', 'middle');
+        text.style.pointerEvents = 'none';  // Allow clicks to pass through to parent group
         text.textContent = node.label;
         g.appendChild(text);
         
@@ -523,6 +566,7 @@ class DiagramGenerator {
         if (node.subtitle) {
             const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             subtitle.setAttribute('x', pos.x + pos.width / 2);
+            subtitle.style.pointerEvents = 'none';  // Allow clicks to pass through
             subtitle.setAttribute('y', pos.y + pos.height + 32);
             subtitle.setAttribute('class', 'node-subtitle');
             subtitle.setAttribute('text-anchor', 'middle');
@@ -546,42 +590,46 @@ class DiagramGenerator {
             // Calculate optimal connection points based on positions
             let x1, y1, x2, y2;
             
+            // Add spacing offset to prevent arrows from touching frames/labels
+            const spacing = 15;  // Pixels away from frame edge
+            const labelSpacing = 25;  // Extra space for labels below frames
+            
             // Determine relative positions
-            const isTargetBelow = targetPos.y > sourcePos.y + sourcePos.height;
-            const isTargetAbove = targetPos.y + targetPos.height < sourcePos.y;
+            const isTargetBelow = targetPos.y > sourcePos.y + sourcePos.height + labelSpacing;
+            const isTargetAbove = targetPos.y + targetPos.height + labelSpacing < sourcePos.y;
             const isTargetRight = targetPos.x > sourcePos.x + sourcePos.width;
             const isTargetLeft = targetPos.x + targetPos.width < sourcePos.x;
             
             // Choose connection points to minimize overlaps
             if (isTargetBelow) {
-                // Connect bottom to top
+                // Connect bottom to top with spacing
                 x1 = sourcePos.x + sourcePos.width / 2;
-                y1 = sourcePos.y + sourcePos.height;
+                y1 = sourcePos.y + sourcePos.height + labelSpacing + spacing;
                 x2 = targetPos.x + targetPos.width / 2;
-                y2 = targetPos.y;
+                y2 = targetPos.y - spacing;
             } else if (isTargetAbove) {
-                // Connect top to bottom
+                // Connect top to bottom with spacing
                 x1 = sourcePos.x + sourcePos.width / 2;
-                y1 = sourcePos.y;
+                y1 = sourcePos.y - spacing;
                 x2 = targetPos.x + targetPos.width / 2;
-                y2 = targetPos.y + targetPos.height;
+                y2 = targetPos.y + targetPos.height + labelSpacing + spacing;
             } else if (isTargetRight) {
-                // Connect right to left
-                x1 = sourcePos.x + sourcePos.width;
+                // Connect right to left with spacing
+                x1 = sourcePos.x + sourcePos.width + spacing;
                 y1 = sourcePos.y + sourcePos.height / 2;
-                x2 = targetPos.x;
+                x2 = targetPos.x - spacing;
                 y2 = targetPos.y + targetPos.height / 2;
             } else if (isTargetLeft) {
-                // Connect left to right
-                x1 = sourcePos.x;
+                // Connect left to right with spacing
+                x1 = sourcePos.x - spacing;
                 y1 = sourcePos.y + sourcePos.height / 2;
-                x2 = targetPos.x + targetPos.width;
+                x2 = targetPos.x + targetPos.width + spacing;
                 y2 = targetPos.y + targetPos.height / 2;
             } else {
-                // Overlapping or side-by-side, use right to left
-                x1 = sourcePos.x + sourcePos.width;
+                // Overlapping or side-by-side, use right to left with spacing
+                x1 = sourcePos.x + sourcePos.width + spacing;
                 y1 = sourcePos.y + sourcePos.height / 2;
-                x2 = targetPos.x;
+                x2 = targetPos.x - spacing;
                 y2 = targetPos.y + targetPos.height / 2;
             }
             

@@ -6,7 +6,7 @@ class AIGenerator {
         this.ollamaUrl = 'http://localhost:11434/api/generate';
         this.model = 'qwen2.5-coder:7b';  // Corrected model name
         this.availableIcons = [];
-        this.markdownContent = '';
+        this.markdownFiles = [];  // Store multiple markdown files
         this.generatedJSON = null;
         
         this.init();
@@ -109,7 +109,12 @@ class AIGenerator {
         // Markdown file upload
         const mdFileUpload = document.getElementById('md-file-upload');
         if (mdFileUpload) {
+            // Ensure multiple attribute is set
+            mdFileUpload.setAttribute('multiple', 'multiple');
             mdFileUpload.addEventListener('change', (e) => this.handleMarkdownUpload(e));
+            console.log('✅ Multiple file upload configured:', mdFileUpload.hasAttribute('multiple'));
+        } else {
+            console.error('❌ File input #md-file-upload not found!');
         }
 
         // Clear markdown
@@ -155,31 +160,57 @@ class AIGenerator {
     }
 
     handleMarkdownUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
 
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            this.markdownContent = e.target.result;
-            this.displayMarkdown(this.markdownContent);
+        // Read all uploaded files
+        const readPromises = Array.from(files).map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve({ name: file.name, content: e.target.result });
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        });
+
+        Promise.all(readPromises).then(fileContents => {
+            // ACCUMULATE files instead of replacing
+            this.markdownFiles = [...this.markdownFiles, ...fileContents];
+            this.displayMarkdown(this.markdownFiles);
             document.getElementById('generate-json-btn').disabled = false;
-        };
-        reader.readAsText(file);
+            
+            // Show count of uploaded files
+            showToast('success', `Added ${fileContents.length} file(s). Total: ${this.markdownFiles.length} file(s)`);
+        }).catch(error => {
+            console.error('Error reading files:', error);
+            alert('Failed to read markdown files');
+        });
+        
         event.target.value = '';
     }
 
-    displayMarkdown(content) {
+    displayMarkdown(fileContents) {
         const mdPreview = document.getElementById('md-preview');
         const mdContent = document.getElementById('md-content');
         
         if (mdPreview && mdContent) {
-            mdContent.textContent = content;
+            // Display all files with headers
+            let displayText = '';
+            fileContents.forEach((file, index) => {
+                displayText += `\n═══════════════════════════════════════\n`;
+                displayText += `📄 File ${index + 1}: ${file.name}\n`;
+                displayText += `═══════════════════════════════════════\n\n`;
+                displayText += file.content;
+                displayText += '\n\n';
+            });
+            
+            mdContent.textContent = displayText;
             mdPreview.style.display = 'block';
         }
     }
 
     clearMarkdown() {
-        this.markdownContent = '';
+        this.markdownFiles = [];
         document.getElementById('md-preview').style.display = 'none';
         document.getElementById('md-content').textContent = '';
         document.getElementById('generate-json-btn').disabled = true;
@@ -261,8 +292,8 @@ USER'S ARCHITECTURE DESCRIPTION:
     }
 
     async generateJSON() {
-        if (!this.markdownContent) {
-            showToast('error', 'Please upload a markdown file first');
+        if (!this.markdownFiles || this.markdownFiles.length === 0) {
+            showToast('error', 'Please upload markdown file(s) first');
             return;
         }
 
@@ -276,7 +307,14 @@ USER'S ARCHITECTURE DESCRIPTION:
         generateBtn.disabled = true;
 
         try {
-            const prompt = this.buildSystemPrompt() + '\n\n' + this.markdownContent;
+            // Combine all markdown files into one prompt
+            let combinedMarkdown = '';
+            this.markdownFiles.forEach((file, index) => {
+                combinedMarkdown += `\n\n### Source File ${index + 1}: ${file.name}\n\n`;
+                combinedMarkdown += file.content;
+            });
+            
+            const prompt = this.buildSystemPrompt() + '\n\n' + combinedMarkdown;
             
             console.log('Sending request to Ollama via proxy...');
             
