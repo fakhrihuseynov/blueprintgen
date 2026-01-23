@@ -6,10 +6,13 @@ A simple, elegant web application for generating cloud architecture diagrams fro
 
 - 📤 **Upload JSON files** - Drop your architecture definitions and see them visualized instantly
 - 🤖 **AI JSON Generator** - Upload markdown descriptions and let AI generate the JSON structure
+- 🖱️ **Drag & Drop Nodes** - Manually reposition any node by dragging it (grab cursor)
 - 🎯 **Smart Layout** - Automatically positions and connects components with hierarchical organization
 - 🏗️ **Hierarchical Support** - Handles nested containers (like Kubernetes namespaces)
 - 🔗 **Relationship Mapping** - Displays connections between services with labels
 - 🎨 **Beautiful UI** - Modern, clean interface with smooth animations
+- 📦 **Compact Nodes** - Small, professional frames (100x70px) with external labels
+- 🔲 **Smart Grouping** - Dotted-border containers for related resources
 - 📱 **Responsive** - Works on desktop and mobile devices
 - 🖼️ **Export** - Download diagrams as PNG images
 
@@ -48,6 +51,8 @@ Open your browser to: **http://localhost:8080**
 1. Click **"Upload JSON"** button
 2. Select your architecture JSON file
 3. View and interact with the generated diagram
+4. **Drag nodes** to manually adjust positions (grab and move!)
+5. Pan and zoom to explore your architecture
 
 ### Option 2: AI-Powered Generation (NEW! 🤖)
 
@@ -219,16 +224,24 @@ The AI is given:
 
 - **Vanilla JavaScript** - No frameworks, no build tools
 - **SVG** - Native diagram rendering
-- **Ollama** - Local AI model integration
-- **Python HTTP Server** - Simple local hosting
+- **Drag & Drop API** - Manual node repositioning
+- **Ollama** - Local AI model integration (qwen2.5-coder:7b)
+- **Python HTTP Server** - Simple local hosting with CORS proxy
 
 ## Tips for Best Results 📝
 
 ### For JSON Files
-1. Use clear, concise labels
+1. Use clear, concise labels (shown below nodes)
 2. Organize hierarchically with containers
 3. Add meaningful connection labels
 4. Choose appropriate icons
+5. **Group related resources** using container nodes with `parentNode`
+
+### For Manual Positioning
+1. **Drag nodes** by clicking and moving them
+2. Pan the canvas by dragging on empty space
+3. Zoom with mouse wheel or controls
+4. Positions are temporary - refresh will reset to auto-layout
 
 ### For AI Generation
 1. **Be specific** - Describe components clearly
@@ -248,16 +261,19 @@ The AI is given:
 ```
 blueprintgen/
 ├── index.html                          # Main HTML
-├── app.js                              # Diagram rendering
-├── ai-generator.js                     # AI integration
 ├── styles.css                          # Styling
-├── server.py                           # HTTP server with Ollama proxy (NEW!)
-├── favicon.svg                         # App icon
-├── sample-architecture.md              # Example markdown
+├── server.py                           # HTTP server with Ollama proxy
 ├── innovate-eks-architecture.json      # Example diagram
 ├── deployable_resources.json           # Example diagram
 ├── assets/
-│   └── icons/                          # Icon files
+│   ├── favicon.svg                     # App icon
+│   └── icons/                          # Infrastructure icons (PNG/SVG)
+├── scripts/
+│   ├── app.js                          # Diagram rendering & drag functionality
+│   └── ai-generator.js                 # AI integration
+├── markdowns/
+│   └── sample-architecture.md          # Example markdown for AI
+├── FIXES.md                            # Change history
 └── README.md                           # This file
 ```
 

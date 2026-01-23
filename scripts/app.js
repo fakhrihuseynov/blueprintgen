@@ -14,6 +14,12 @@ class DiagramGenerator {
         this.dragStartX = 0;
         this.dragStartY = 0;
         
+        // Node dragging state
+        this.isDraggingNode = false;
+        this.draggedNode = null;
+        this.nodeDragStart = { x: 0, y: 0 };
+        this.layout = {};
+        
         this.setupEventListeners();
     }
 
@@ -40,6 +46,35 @@ class DiagramGenerator {
     }
 
     onMouseDown(e) {
+        // Check if clicking on a node
+        const nodeGroup = e.target.closest('.node-group');
+        if (nodeGroup) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.isDraggingNode = true;
+            this.draggedNode = nodeGroup;
+            const nodeId = nodeGroup.getAttribute('data-node-id');
+            const pos = this.layout[nodeId];
+            
+            if (!pos) return;
+            
+            // Get click position in SVG coordinates
+            const pt = this.svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgPt = pt.matrixTransform(this.svg.getScreenCTM().inverse());
+            
+            this.nodeDragStart = {
+                x: svgPt.x - pos.x,
+                y: svgPt.y - pos.y
+            };
+            
+            nodeGroup.style.cursor = 'grabbing';
+            return;
+        }
+        
+        // Canvas panning
         if (e.target === this.svg || e.target === this.group) {
             this.isDragging = true;
             this.dragStartX = e.clientX - this.translateX;
@@ -49,6 +84,32 @@ class DiagramGenerator {
     }
 
     onMouseMove(e) {
+        // Handle node dragging
+        if (this.isDraggingNode && this.draggedNode) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const pt = this.svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgPt = pt.matrixTransform(this.svg.getScreenCTM().inverse());
+            
+            const nodeId = this.draggedNode.getAttribute('data-node-id');
+            if (!this.layout[nodeId]) return;
+            
+            const newX = svgPt.x - this.nodeDragStart.x;
+            const newY = svgPt.y - this.nodeDragStart.y;
+            
+            // Update layout
+            this.layout[nodeId].x = newX;
+            this.layout[nodeId].y = newY;
+            
+            // Redraw
+            this.redrawDiagram();
+            return;
+        }
+        
+        // Handle canvas panning
         if (this.isDragging) {
             this.translateX = e.clientX - this.dragStartX;
             this.translateY = e.clientY - this.dragStartY;
@@ -57,8 +118,18 @@ class DiagramGenerator {
     }
 
     onMouseUp() {
-        this.isDragging = false;
-        this.svg.style.cursor = 'default';
+        if (this.isDraggingNode) {
+            this.isDraggingNode = false;
+            if (this.draggedNode) {
+                this.draggedNode.style.cursor = 'grab';
+                this.draggedNode = null;
+            }
+        }
+        
+        if (this.isDragging) {
+            this.isDragging = false;
+            this.svg.style.cursor = 'default';
+        }
     }
 
     onWheel(e) {
@@ -163,14 +234,14 @@ class DiagramGenerator {
         
         console.log(`Loading ${this.nodes.length} nodes and ${this.edges.length} edges`);
         
-        // Calculate layout
-        const layout = this.calculateLayout(this.nodes, this.edges);
+        // Calculate layout and store it
+        this.layout = this.calculateLayout(this.nodes, this.edges);
         
         // Draw edges first (so they appear behind nodes)
-        this.drawEdges(layout);
+        this.drawEdges(this.layout);
         
         // Draw nodes
-        this.drawNodes(layout);
+        this.drawNodes(this.layout);
         
         // Update info
         this.updateInfo(jsonData);
@@ -222,8 +293,8 @@ class DiagramGenerator {
                 layout[child.id] = {
                     x: layout[node.id].x + 50 + col * 220,
                     y: layout[node.id].y + 60 + row * 140,
-                    width: 140,
-                    height: 80,
+                    width: 70,
+                    height: 70,
                     type: 'node'
                 };
             });
@@ -239,8 +310,8 @@ class DiagramGenerator {
             layout[node.id] = {
                 x: 50 + col * 280,
                 y: containerY + row * 160,
-                width: 140,
-                height: 80,
+                width: 70,
+                height: 70,
                 type: 'node'
             };
         });
@@ -344,8 +415,8 @@ class DiagramGenerator {
                     layout[nodeId] = {
                         x: currentX,
                         y: currentY + nodeIndex * nodeVerticalSpacing,
-                        width: 140,  // More compact
-                        height: 80,  // More compact
+                        width: 70,   // Square and compact
+                        height: 70,  // Square and compact
                         type: 'node',
                         layer: layerIndex,
                         group: groupKey
@@ -415,6 +486,7 @@ class DiagramGenerator {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', 'node-group');
         g.setAttribute('data-node-id', node.id);
+        g.style.cursor = 'grab';  // Add grab cursor for draggable nodes
         
         // Node rectangle (compact)
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -586,12 +658,24 @@ class DiagramGenerator {
         document.getElementById('container-count').textContent = containerCount;
     }
 
+    redrawDiagram() {
+        // Clear and redraw with updated positions
+        this.group.innerHTML = '';
+        
+        // Redraw edges first (behind nodes)
+        this.drawEdges(this.layout);
+        
+        // Redraw nodes
+        this.drawNodes(this.layout);
+    }
+
     clear() {
         while (this.group.firstChild) {
             this.group.removeChild(this.group.firstChild);
         }
         this.nodes = [];
         this.edges = [];
+        this.layout = {};
     }
 }
 
@@ -847,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Download diagram as PNG
     if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
+        downloadBtn.addEventListener('click', async () => {
             try {
                 const svgElement = document.getElementById('diagram-svg');
                 if (!svgElement) {
@@ -855,31 +939,77 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                const svgData = new XMLSerializer().serializeToString(svgElement);
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+                // Clone the SVG to avoid modifying the original
+                const svgClone = svgElement.cloneNode(true);
+                
+                // Get computed styles and embed them
+                const styles = document.getElementById('diagram-styles') || document.createElement('style');
+                styles.textContent = `
+                    .node-rect { fill: #ffffff; stroke: #e5e7eb; stroke-width: 2; }
+                    .node-label { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; fill: #1f2937; }
+                    .node-subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 400; fill: #6b7280; }
+                    .edge-path { fill: none; stroke: #6366f1; stroke-width: 2; opacity: 0.6; }
+                    .edge-label { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 500; fill: #6b7280; }
+                    .edge-label-bg { fill: white; opacity: 0.95; }
+                    .container-rect { fill: rgba(99, 102, 241, 0.04); stroke: rgba(79, 70, 229, 0.5); stroke-width: 2; stroke-dasharray: 8, 4; }
+                    .container-label { font-family: system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 700; fill: #1f2937; }
+                    .container-subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 500; fill: #6b7280; }
+                `;
+                
+                const defs = svgClone.querySelector('defs') || svgClone.insertBefore(document.createElementNS('http://www.w3.org/2000/svg', 'defs'), svgClone.firstChild);
+                defs.appendChild(styles);
+                
+                // Get the bounding box of the actual content
+                const bbox = svgElement.querySelector('#diagram-group').getBBox();
+                
+                // Set viewBox to content bounds with padding
+                const padding = 50;
+                svgClone.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`);
+                svgClone.setAttribute('width', bbox.width + padding * 2);
+                svgClone.setAttribute('height', bbox.height + padding * 2);
+                
+                // Serialize the SVG
+                const svgData = new XMLSerializer().serializeToString(svgClone);
+                const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                
+                // Create image and canvas
                 const img = new Image();
-                
-                canvas.width = svgElement.clientWidth;
-                canvas.height = svgElement.clientHeight;
-                
                 img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Set canvas size
+                    canvas.width = bbox.width + padding * 2;
+                    canvas.height = bbox.height + padding * 2;
+                    
+                    // Fill white background
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw image
                     ctx.drawImage(img, 0, 0);
                     
+                    // Export as PNG
                     canvas.toBlob(blob => {
-                        const url = URL.createObjectURL(blob);
+                        const pngUrl = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.download = 'architecture-diagram.png';
-                        link.href = url;
+                        link.href = pngUrl;
                         link.click();
+                        URL.revokeObjectURL(pngUrl);
                         URL.revokeObjectURL(url);
                         showToast('success', 'Diagram exported successfully!');
                     });
                 };
                 
-                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+                img.onerror = () => {
+                    showToast('error', 'Failed to render diagram');
+                    URL.revokeObjectURL(url);
+                };
+                
+                img.src = url;
+                
             } catch (error) {
                 showToast('error', 'Failed to export diagram: ' + error.message);
                 console.error('Export error:', error);
