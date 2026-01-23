@@ -9,6 +9,13 @@ class DiagramGenerator {
         this.edges = [];
         this.layout = {};
         
+        // Dragging state
+        this.isDragging = false;
+        this.isDraggingNode = false;
+        this.dragStartX = 0;
+        this.dragStartY = 0;
+        this.draggedNode = null;
+        
         // Instantiate sub-modules
         this.layoutEngine = new LayoutEngine();
         this.eventHandlers = new EventHandlers(this);
@@ -16,6 +23,11 @@ class DiagramGenerator {
 
     setupEventListeners() {
         this.eventHandlers.setupEventListeners(this.svg);
+    }
+
+    // Update SVG transform for pan and zoom (alias to applyTransform)
+    updateTransform() {
+        this.applyTransform();
     }
 
     // Layout calculation (delegates to LayoutEngine)

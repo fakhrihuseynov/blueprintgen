@@ -25,8 +25,26 @@ class LayoutEngine {
         let containerY = 50;
         containers.forEach((node) => {
             const children = nodes.filter(n => n.parentNode === node.id);
-            const containerWidth = Math.max(800, children.length * 200 + 100);
-            const containerHeight = Math.ceil(children.length / 4) * 150 + 100;
+            
+            // Dynamic sizing based on child count
+            const childCount = children.length;
+            const rowLayout = node.layout === 'row'; // Use row layout if specified
+            
+            let containerWidth, containerHeight, cols, rows;
+            
+            if (rowLayout || childCount <= 5) {
+                // Single row layout for small containers
+                cols = childCount;
+                rows = 1;
+                containerWidth = Math.max(300, cols * 150 + 100);
+                containerHeight = 180;
+            } else {
+                // Grid layout for larger containers
+                cols = Math.min(4, Math.ceil(Math.sqrt(childCount)));
+                rows = Math.ceil(childCount / cols);
+                containerWidth = cols * 150 + 100;
+                containerHeight = rows * 140 + 80;
+            }
             
             layout[node.id] = {
                 x: 50,
@@ -36,13 +54,13 @@ class LayoutEngine {
                 type: 'container'
             };
             
-            // Layout children within container in a grid
+            // Layout children within container
             children.forEach((child, childIndex) => {
-                const col = childIndex % 4;
-                const row = Math.floor(childIndex / 4);
+                const col = childIndex % cols;
+                const row = Math.floor(childIndex / cols);
                 layout[child.id] = {
-                    x: layout[node.id].x + 50 + col * 220,
-                    y: layout[node.id].y + 60 + row * 140,
+                    x: layout[node.id].x + 50 + col * 150,
+                    y: layout[node.id].y + 50 + row * 130,
                     width: 70,
                     height: 70,
                     type: 'node'

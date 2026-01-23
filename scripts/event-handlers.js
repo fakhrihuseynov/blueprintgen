@@ -18,12 +18,12 @@ class EventHandlers {
         this.core.svg.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.core.svg.addEventListener('mouseleave', this.onMouseUp.bind(this));
         
-        // Mouse wheel for zooming
-        this.core.svg.addEventListener('wheel', this.onWheel.bind(this));
+        // Mouse wheel for zooming (with passive: false for preventDefault)
+        this.core.svg.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
         
-        // Touch events for mobile
-        this.core.svg.addEventListener('touchstart', this.onTouchStart.bind(this));
-        this.core.svg.addEventListener('touchmove', this.onTouchMove.bind(this));
+        // Touch events for mobile (with passive: false for preventDefault)
+        this.core.svg.addEventListener('touchstart', this.onTouchStart.bind(this), { passive: false });
+        this.core.svg.addEventListener('touchmove', this.onTouchMove.bind(this), { passive: false });
         this.core.svg.addEventListener('touchend', this.onTouchEnd.bind(this));
     }
 
@@ -57,13 +57,11 @@ class EventHandlers {
             return;
         }
         
-        // Canvas panning
-        if (e.target === this.core.svg || e.target === this.core.group) {
-            this.core.isDragging = true;
-            this.core.dragStartX = e.clientX - this.core.translateX;
-            this.core.dragStartY = e.clientY - this.core.translateY;
-            this.core.svg.style.cursor = 'grabbing';
-        }
+        // Canvas panning - allow panning on any non-node click
+        this.core.isDragging = true;
+        this.core.dragStartX = e.clientX - this.core.transform.x;
+        this.core.dragStartY = e.clientY - this.core.transform.y;
+        this.core.svg.style.cursor = 'grabbing';
     }
 
     onMouseMove(e) {
@@ -94,8 +92,8 @@ class EventHandlers {
         
         // Handle canvas panning
         if (this.core.isDragging) {
-            this.core.translateX = e.clientX - this.core.dragStartX;
-            this.core.translateY = e.clientY - this.core.dragStartY;
+            this.core.transform.x = e.clientX - this.core.dragStartX;
+            this.core.transform.y = e.clientY - this.core.dragStartY;
             this.core.updateTransform();
         }
     }
@@ -118,16 +116,16 @@ class EventHandlers {
     onWheel(e) {
         e.preventDefault();
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = this.core.scale * delta;
+        const newScale = this.core.transform.scale * delta;
         
         if (newScale >= 0.1 && newScale <= 3) {
             const rect = this.core.svg.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            this.core.translateX = x - (x - this.core.translateX) * delta;
-            this.core.translateY = y - (y - this.core.translateY) * delta;
-            this.core.scale = newScale;
+            this.core.transform.x = x - (x - this.core.transform.x) * delta;
+            this.core.transform.y = y - (y - this.core.transform.y) * delta;
+            this.core.transform.scale = newScale;
             
             this.core.updateTransform();
         }
@@ -136,16 +134,16 @@ class EventHandlers {
     onTouchStart(e) {
         if (e.touches.length === 1) {
             this.core.isDragging = true;
-            this.core.dragStartX = e.touches[0].clientX - this.core.translateX;
-            this.core.dragStartY = e.touches[0].clientY - this.core.translateY;
+            this.core.dragStartX = e.touches[0].clientX - this.core.transform.x;
+            this.core.dragStartY = e.touches[0].clientY - this.core.transform.y;
         }
     }
 
     onTouchMove(e) {
         if (this.core.isDragging && e.touches.length === 1) {
             e.preventDefault();
-            this.core.translateX = e.touches[0].clientX - this.core.dragStartX;
-            this.core.translateY = e.touches[0].clientY - this.core.dragStartY;
+            this.core.transform.x = e.touches[0].clientX - this.core.dragStartX;
+            this.core.transform.y = e.touches[0].clientY - this.core.dragStartY;
             this.core.updateTransform();
         }
     }
