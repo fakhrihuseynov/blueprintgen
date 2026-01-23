@@ -220,10 +220,10 @@ class DiagramGenerator {
                 const col = childIndex % 4;
                 const row = Math.floor(childIndex / 4);
                 layout[child.id] = {
-                    x: layout[node.id].x + 50 + col * 200,
-                    y: layout[node.id].y + 60 + row * 130,
-                    width: 180,
-                    height: 100,
+                    x: layout[node.id].x + 50 + col * 220,
+                    y: layout[node.id].y + 60 + row * 140,
+                    width: 140,
+                    height: 80,
                     type: 'node'
                 };
             });
@@ -237,10 +237,10 @@ class DiagramGenerator {
             const col = index % 5;
             const row = Math.floor(index / 5);
             layout[node.id] = {
-                x: 50 + col * 220,
-                y: containerY + row * 150,
-                width: 180,
-                height: 100,
+                x: 50 + col * 280,
+                y: containerY + row * 160,
+                width: 140,
+                height: 80,
                 type: 'node'
             };
         });
@@ -317,42 +317,46 @@ class DiagramGenerator {
             return groups;
         });
         
-        // Calculate positions
-        const layerSpacing = 300;
-        const nodeSpacing = 220;
-        const groupSpacing = 100;
-        let startY = 100;
+        // Calculate positions with better organization
+        const layerSpacing = 280;  // Vertical space between layers
+        const nodeSpacing = 300;   // Horizontal space between nodes (increased)
+        const nodeVerticalSpacing = 160; // Vertical space within same layer (increased)
+        let currentY = 80;
         
         groupedLayers.forEach((groups, layerIndex) => {
             const groupKeys = Object.keys(groups);
+            
+            // Calculate total width needed for this layer
+            const totalNodes = groupKeys.reduce((sum, key) => sum + groups[key].length, 0);
+            
+            // Position nodes horizontally across the layer
             let currentX = 100;
-            let maxHeightInLayer = 0;
+            let maxNodesInGroup = 0;
             
             groupKeys.forEach((groupKey, groupIndex) => {
                 const groupNodes = groups[groupKey];
+                maxNodesInGroup = Math.max(maxNodesInGroup, groupNodes.length);
                 
-                // Position nodes in this group vertically
+                // Position nodes in this group horizontally
                 groupNodes.forEach((nodeId, nodeIndex) => {
                     const node = nodes.find(n => n.id === nodeId);
-                    const y = startY + nodeIndex * 150;
                     
                     layout[nodeId] = {
                         x: currentX,
-                        y: y,
-                        width: 180,
-                        height: 100,
+                        y: currentY + nodeIndex * nodeVerticalSpacing,
+                        width: 140,  // More compact
+                        height: 80,  // More compact
                         type: 'node',
                         layer: layerIndex,
                         group: groupKey
                     };
-                    
-                    maxHeightInLayer = Math.max(maxHeightInLayer, y + 100);
                 });
                 
-                currentX += nodeSpacing + (groupIndex < groupKeys.length - 1 ? groupSpacing : 0);
+                currentX += nodeSpacing;
             });
             
-            startY = maxHeightInLayer + layerSpacing;
+            // Move to next layer
+            currentY += (maxNodesInGroup * nodeVerticalSpacing) + layerSpacing;
         });
         
         return layout;
@@ -375,7 +379,7 @@ class DiagramGenerator {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', 'container-group');
         
-        // Container rectangle
+        // Container rectangle with dotted border
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', pos.x);
         rect.setAttribute('y', pos.y);
@@ -383,21 +387,22 @@ class DiagramGenerator {
         rect.setAttribute('height', pos.height);
         rect.setAttribute('rx', 16);
         rect.setAttribute('class', 'container-rect');
+        rect.setAttribute('stroke-dasharray', '8,4');  // Dotted border
         g.appendChild(rect);
         
-        // Label
+        // Label at top-left
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', pos.x + 20);
-        text.setAttribute('y', pos.y + 30);
+        text.setAttribute('y', pos.y + 28);
         text.setAttribute('class', 'container-label');
         text.textContent = node.label;
         g.appendChild(text);
         
-        // Subtitle
+        // Subtitle below label
         if (node.subtitle) {
             const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             subtitle.setAttribute('x', pos.x + 20);
-            subtitle.setAttribute('y', pos.y + 48);
+            subtitle.setAttribute('y', pos.y + 44);
             subtitle.setAttribute('class', 'container-subtitle');
             subtitle.textContent = node.subtitle;
             g.appendChild(subtitle);
@@ -411,42 +416,42 @@ class DiagramGenerator {
         g.setAttribute('class', 'node-group');
         g.setAttribute('data-node-id', node.id);
         
-        // Node rectangle
+        // Node rectangle (compact)
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', pos.x);
         rect.setAttribute('y', pos.y);
         rect.setAttribute('width', pos.width);
         rect.setAttribute('height', pos.height);
-        rect.setAttribute('rx', 12);
+        rect.setAttribute('rx', 8);
         rect.setAttribute('class', 'node-rect');
         g.appendChild(rect);
         
-        // Icon
+        // Icon (centered in compact box)
         if (node.icon) {
             const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            image.setAttribute('x', pos.x + pos.width / 2 - 24);
-            image.setAttribute('y', pos.y + 15);
-            image.setAttribute('width', 48);
-            image.setAttribute('height', 48);
+            image.setAttribute('x', pos.x + pos.width / 2 - 20);
+            image.setAttribute('y', pos.y + pos.height / 2 - 20);
+            image.setAttribute('width', 40);
+            image.setAttribute('height', 40);
             image.setAttribute('href', node.icon);
             image.setAttribute('class', 'node-icon');
             g.appendChild(image);
         }
         
-        // Label
+        // Label BELOW the box to avoid overlap
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', pos.x + pos.width / 2);
-        text.setAttribute('y', pos.y + (node.icon ? 75 : 45));
+        text.setAttribute('y', pos.y + pos.height + 18);
         text.setAttribute('class', 'node-label');
         text.setAttribute('text-anchor', 'middle');
         text.textContent = node.label;
         g.appendChild(text);
         
-        // Subtitle
+        // Subtitle BELOW the label
         if (node.subtitle) {
             const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             subtitle.setAttribute('x', pos.x + pos.width / 2);
-            subtitle.setAttribute('y', pos.y + (node.icon ? 90 : 60));
+            subtitle.setAttribute('y', pos.y + pos.height + 32);
             subtitle.setAttribute('class', 'node-subtitle');
             subtitle.setAttribute('text-anchor', 'middle');
             subtitle.textContent = node.subtitle;
@@ -508,18 +513,31 @@ class DiagramGenerator {
                 y2 = targetPos.y + targetPos.height / 2;
             }
             
-            // Create smooth curved path
+            // Create orthogonal (right-angle) path for clean blueprint look
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d;
             
-            if (Math.abs(x2 - x1) > Math.abs(y2 - y1)) {
-                // Horizontal flow - use horizontal curves
-                const midX = (x1 + x2) / 2;
-                d = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
-            } else {
-                // Vertical flow - use vertical curves
+            // Calculate routing with right angles
+            if (isTargetBelow || isTargetAbove) {
+                // Vertical flow - straight down/up with optional horizontal offset
                 const midY = (y1 + y2) / 2;
-                d = `M ${x1} ${y1} C ${x1} ${midY}, ${x2} ${midY}, ${x2} ${y2}`;
+                if (Math.abs(x2 - x1) < 10) {
+                    // Nearly aligned - straight line
+                    d = `M ${x1} ${y1} L ${x2} ${y2}`;
+                } else {
+                    // Offset - use right angles
+                    d = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
+                }
+            } else {
+                // Horizontal flow - straight right/left with optional vertical offset
+                const midX = (x1 + x2) / 2;
+                if (Math.abs(y2 - y1) < 10) {
+                    // Nearly aligned - straight line
+                    d = `M ${x1} ${y1} L ${x2} ${y2}`;
+                } else {
+                    // Offset - use right angles
+                    d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
+                }
             }
             
             path.setAttribute('d', d);
