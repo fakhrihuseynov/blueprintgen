@@ -19,25 +19,38 @@ class AIGenerator {
 
     async loadAvailableIcons() {
         try {
-            // Fetch the assets/icons directory listing
-            const response = await fetch('./assets/icons/');
-            const text = await response.text();
+            // Fetch icons from subdirectories: AWS, Kubernetes, Monitoring, General
+            const folders = ['AWS', 'Kubernetes', 'Monitoring', 'General'];
+            const allIcons = [];
             
-            // Parse HTML to extract icon filenames
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const links = doc.querySelectorAll('a');
+            for (const folder of folders) {
+                try {
+                    const response = await fetch(`./assets/icons/${folder}/`);
+                    const text = await response.text();
+                    
+                    // Parse HTML to extract icon filenames
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const links = doc.querySelectorAll('a');
+                    
+                    const folderIcons = Array.from(links)
+                        .map(link => link.getAttribute('href'))
+                        .filter(href => href && (href.endsWith('.png') || href.endsWith('.svg')))
+                        .map(filename => ({
+                            name: filename.replace(/\.(png|svg)$/, ''),
+                            path: `./assets/icons/${folder}/${filename}`,
+                            extension: filename.endsWith('.png') ? 'png' : 'svg',
+                            category: folder
+                        }));
+                    
+                    allIcons.push(...folderIcons);
+                } catch (error) {
+                    console.warn(`Could not load icons from ${folder}:`, error);
+                }
+            }
             
-            this.availableIcons = Array.from(links)
-                .map(link => link.getAttribute('href'))
-                .filter(href => href && (href.endsWith('.png') || href.endsWith('.svg')))
-                .map(filename => ({
-                    name: filename.replace(/\.(png|svg)$/, ''),
-                    path: `./assets/icons/${filename}`,
-                    extension: filename.endsWith('.png') ? 'png' : 'svg'
-                }));
-            
-            console.log(`Loaded ${this.availableIcons.length} available icons`);
+            this.availableIcons = allIcons;
+            console.log(`Loaded ${this.availableIcons.length} available icons from ${folders.length} categories`);
             this.displayAvailableIcons();
         } catch (error) {
             console.error('Error loading icons:', error);
@@ -48,25 +61,35 @@ class AIGenerator {
     }
 
     getKnownIcons() {
-        // Fallback list based on your actual files
-        const iconNames = [
-            'alb', 'app-config', 'argocd', 'backend-deploy', 'backend-svc',
-            'cloudfront-cdn', 'cloudwatch-logs', 'cloudwatch', 'cluster-autoscaler',
-            'codebuild', 'codepipeline', 'db-secret', 'developer', 'ecr-registry',
-            'eks-cluster', 'eks-node', 'eks-target', 'eks', 'elasticache',
-            'external-dns', 'flask-api', 'fluentbit', 'frontend-deploy', 'frontend-svc',
-            'git-repo', 'grafana', 'helm-charts', 'helm', 'igw', 'ingress',
-            'nat', 'postgres-db', 'prometheus', 'rds-primary', 'rds-replica',
-            'rds-standby', 'rds', 'react-frontend', 'redis-cache', 'redis-svc',
-            'route-53-hosted-zone', 's3-storage', 'secrets', 'users-client',
-            'users', 'vpc', 'waf', 'worker-deploy', 'iam-role', 'iam-policy',
-            'security-group', 'subnet', 'route-table', 'route-table-association'
-        ];
+        // Fallback list with categorized icons
+        const categories = {
+            'AWS': ['alb', 'cloudfront-cdn', 'cloudwatch-logs', 'cloudwatch', 'codebuild', 
+                    'codepipeline', 'ecr-registry', 'eks-cluster', 'eks-node', 'eks-target', 
+                    'eks', 'elasticache', 'igw', 'nat', 'rds-primary', 'rds-replica', 
+                    'rds-standby', 'rds', 'route-53-hosted-zone', 's3-storage', 'secrets', 
+                    'vpc', 'waf'],
+            'Kubernetes': ['argocd', 'cluster-autoscaler', 'external-dns', 'fluentbit', 
+                          'helm-charts', 'helm', 'ingress'],
+            'Monitoring': ['grafana', 'prometheus'],
+            'General': ['app-config', 'backend-deploy', 'backend-svc', 'db-secret', 
+                       'developer', 'flask-api', 'frontend-deploy', 'frontend-svc', 
+                       'git-repo', 'postgres-db', 'react-frontend', 'redis-cache', 
+                       'redis-svc', 'users-client', 'users', 'worker-deploy', 'az-1a', 
+                       'az-1b', 'az-1c', 'db-1a', 'db-1b', 'db-1c', 'priv-1a', 'priv-1b', 
+                       'priv-1c', 'pub-1a', 'pub-1b', 'pub-1c']
+        };
         
-        return iconNames.flatMap(name => [
-            { name: name, path: `./assets/icons/${name}.png`, extension: 'png' },
-            { name: name, path: `./assets/icons/${name}.svg`, extension: 'svg' }
-        ]);
+        const allIcons = [];
+        for (const [category, iconNames] of Object.entries(categories)) {
+            iconNames.forEach(name => {
+                allIcons.push(
+                    { name: name, path: `./assets/icons/${category}/${name}.png`, extension: 'png', category: category },
+                    { name: name, path: `./assets/icons/${category}/${name}.svg`, extension: 'svg', category: category }
+                );
+            });
+        }
+        
+        return allIcons;
     }
 
     displayAvailableIcons() {
@@ -183,7 +206,7 @@ class AIGenerator {
             showToast('success', `Added ${fileContents.length} file(s). Total: ${this.markdownFiles.length} file(s)`);
         }).catch(error => {
             console.error('Error reading files:', error);
-            alert('Failed to read markdown files');
+            showToast('error', 'Failed to read markdown files: ' + error.message);
         });
         
         event.target.value = '';
@@ -192,6 +215,7 @@ class AIGenerator {
     displayMarkdown(fileContents) {
         const mdPreview = document.getElementById('md-preview');
         const mdContent = document.getElementById('md-content');
+        const fileCountBadge = document.getElementById('file-count-badge');
         
         if (mdPreview && mdContent) {
             // Display all files with headers
@@ -206,14 +230,27 @@ class AIGenerator {
             
             mdContent.textContent = displayText;
             mdPreview.style.display = 'block';
+            
+            // Update file count badge
+            if (fileCountBadge) {
+                fileCountBadge.textContent = `${fileContents.length} file${fileContents.length !== 1 ? 's' : ''} loaded`;
+            }
         }
     }
 
     clearMarkdown() {
         this.markdownFiles = [];
-        document.getElementById('md-preview').style.display = 'none';
-        document.getElementById('md-content').textContent = '';
-        document.getElementById('generate-json-btn').disabled = true;
+        const mdPreview = document.getElementById('md-preview');
+        const mdContent = document.getElementById('md-content');
+        const fileCountBadge = document.getElementById('file-count-badge');
+        const generateBtn = document.getElementById('generate-json-btn');
+        
+        if (mdPreview) mdPreview.style.display = 'none';
+        if (mdContent) mdContent.textContent = '';
+        if (fileCountBadge) fileCountBadge.textContent = '0 files loaded';
+        if (generateBtn) generateBtn.disabled = true;
+        
+        showToast('success', 'Cleared all markdown files');
     }
 
     buildSystemPrompt() {
