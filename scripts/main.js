@@ -104,14 +104,14 @@ function loadExampleDiagram() {
             {"id": "worker-deploy", "label": "Worker Deployment", "subtitle": "Background Jobs", "icon": "./assets/icons/Kubernetes/deploy.svg", "parentNode": "ns-prod"},
             {"id": "backend-svc", "label": "Backend Service", "subtitle": "ClusterIP", "icon": "./assets/icons/Kubernetes/svc.svg", "parentNode": "ns-prod"},
             {"id": "frontend-svc", "label": "Frontend Service", "subtitle": "ClusterIP", "icon": "./assets/icons/Kubernetes/svc.svg", "parentNode": "ns-prod"},
-            {"id": "redis-svc", "label": "Redis Service", "subtitle": "External Service", "icon": "./assets/icons/General/Res_Database_48_Light.svg", "parentNode": "ns-prod"},
+            {"id": "redis-svc", "label": "Redis Service", "subtitle": "External Service", "icon": "./assets/icons/General/Database_48_Light.svg", "parentNode": "ns-prod"},
             {"id": "db-secret", "label": "Database Secret", "subtitle": "RDS Credentials", "icon": "./assets/icons/Kubernetes/secret.svg", "parentNode": "ns-prod"},
             {"id": "app-config", "label": "App ConfigMap", "subtitle": "Environment Config", "icon": "./assets/icons/Kubernetes/cm.svg", "parentNode": "ns-prod"},
             {"id": "prometheus", "label": "Prometheus", "subtitle": "Metrics Collection", "icon": "./assets/icons/Monitoring/prometheus.svg", "parentNode": "ns-monitoring"},
             {"id": "grafana", "label": "Grafana", "subtitle": "Dashboards", "icon": "./assets/icons/Monitoring/grafana.svg", "parentNode": "ns-monitoring"},
             {"id": "fluentbit", "label": "Fluent Bit", "subtitle": "Log Collection", "icon": "./assets/icons/Monitoring/fluentbit.svg", "parentNode": "ns-monitoring"},
             {"id": "cluster-autoscaler", "label": "Cluster Autoscaler", "subtitle": "Node Scaling", "icon": "./assets/icons/Kubernetes/hpa.svg", "parentNode": "ns-system"},
-            {"id": "external-dns", "label": "External DNS", "subtitle": "DNS Management", "icon": "./assets/icons/General/Res_Internet_48_Light.svg", "parentNode": "ns-system"}
+            {"id": "external-dns", "label": "External DNS", "subtitle": "DNS Management", "icon": "./assets/icons/General/Internet_48_Light.svg", "parentNode": "ns-system"}
         ],
         "edges": [
             {"id": "e1", "source": "ingress", "target": "frontend-svc", "label": "routes traffic"},

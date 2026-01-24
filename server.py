@@ -46,7 +46,7 @@ class OllamaProxyHandler(http.server.SimpleHTTPRequestHandler):
                     headers={'Content-Type': 'application/json'}
                 )
                 
-                with urllib.request.urlopen(req, timeout=120) as response:
+                with urllib.request.urlopen(req, timeout=300) as response:
                     response_data = response.read()
                     
                     # Send success response

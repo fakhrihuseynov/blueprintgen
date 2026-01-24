@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "aws-vpc",
+      "label": "VPC",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg"
+    },
+    {
+      "id": "aws-subnet",
+      "label": "Subnet",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "aws-vpc"
+    },
+    {
+      "id": "aws-route-table",
+      "label": "Route Table",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "aws-vpc"
+    },
+    {
+      "id": "aws-security-group",
+      "label": "Security Group",
+      "type": "security",
+      "icon": "./assets/icons/General/Res_Firewall_48_Light.svg"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "aws-vpc",
+      "target": "aws-subnet",
+      "label": "contains"
+    },
+    {
+      "id": "e2",
+      "source": "aws-vpc",
+      "target": "aws-route-table",
+      "label": "contains"
+    },
+    {
+      "id": "e3",
+      "source": "aws-subnet",
+      "target": "aws-security-group",
+      "label": "uses"
+    }
+  ]
+}

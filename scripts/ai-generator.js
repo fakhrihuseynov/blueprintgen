@@ -4,16 +4,25 @@
 class AIGenerator {
     constructor() {
         this.ollamaUrl = 'http://localhost:11434/api/generate';
-        this.model = 'qwen2.5-coder:7b';  // Corrected model name
+        this.model = 'qwen2.5-coder:7b';
         this.availableIcons = [];
-        this.markdownFiles = [];  // Store multiple markdown files
+        this.markdownFiles = [];
         this.generatedJSON = null;
+        
+        // Modules (initialized after icons loaded)
+        this.promptBuilder = null;
+        this.iconValidator = null;
         
         this.init();
     }
 
     async init() {
         await this.loadAvailableIcons();
+        
+        // Initialize modules with loaded icons
+        this.promptBuilder = new AIPromptBuilder(this.availableIcons);
+        this.iconValidator = new IconValidator(this.availableIcons);
+        
         this.setupEventListeners();
     }
 
@@ -51,8 +60,8 @@ class AIGenerator {
                 }
             }
             
-            // Load Kubernetes, Monitoring, General (flat structure, all SVG)
-            const flatFolders = ['Kubernetes', 'Monitoring', 'General'];
+            // Load Kubernetes, Monitoring, General, GCP (flat structure, all SVG)
+            const flatFolders = ['Kubernetes', 'Monitoring', 'General', 'GCP'];
             for (const folder of flatFolders) {
                 try {
                     const response = await fetch(`./assets/icons/${folder}/`);
@@ -306,150 +315,6 @@ class AIGenerator {
         showToast('success', 'Cleared all markdown files');
     }
 
-    // Resource to icon category mapping
-    getResourceCategory(resourceType) {
-        const mappings = {
-            // AWS mappings
-            'EC2|Instance|Virtual Machine': 'AWS/Compute',
-            'EKS|Kubernetes|K8s': 'AWS/Containers',
-            'ECS|Fargate|Container Service': 'AWS/Containers',
-            'RDS|Database|Aurora|PostgreSQL|MySQL': 'AWS/Database',
-            'DynamoDB|NoSQL': 'AWS/Database',
-            'S3|Bucket|Object Storage': 'AWS/Storage',
-            'VPC|Subnet|Network': 'AWS/Networking-Content-Delivery',
-            'Lambda|Function|Serverless': 'AWS/Compute',
-            'IAM|Role|Policy|Identity|Access': 'AWS/Security-Identity-Compliance',
-            'CloudWatch|Monitoring|Logs': 'AWS/Management-Governance',
-            
-            // Kubernetes mappings
-            'Deployment|Pod|Service|Ingress|ConfigMap|Secret': 'Kubernetes',
-            
-            // Monitoring
-            'Prometheus|Grafana|Fluent': 'Monitoring'
-        };
-        
-        for (const [pattern, category] of Object.entries(mappings)) {
-            const regex = new RegExp(pattern, 'i');
-            if (regex.test(resourceType)) {
-                return category;
-            }
-        }
-        return 'General';
-    }
-
-    buildSystemPrompt() {
-        // Organize icons by provider and category
-        const iconsByProvider = {
-            AWS: {},
-            Kubernetes: [],
-            Monitoring: [],
-            General: []
-        };
-        
-        this.availableIcons.forEach(icon => {
-            if (icon.category === 'AWS' && icon.subcategory) {
-                if (!iconsByProvider.AWS[icon.subcategory]) {
-                    iconsByProvider.AWS[icon.subcategory] = [];
-                }
-                iconsByProvider.AWS[icon.subcategory].push(icon);
-            } else if (icon.category === 'Kubernetes') {
-                iconsByProvider.Kubernetes.push(icon);
-            } else if (icon.category === 'Monitoring') {
-                iconsByProvider.Monitoring.push(icon);
-            } else {
-                iconsByProvider.General.push(icon);
-            }
-        });
-
-        // Build concise, organized icon reference
-        let iconReference = '';
-        
-        // AWS icons by subcategory
-        iconReference += '\n🔷 AWS ICONS (by service category):\n';
-        Object.keys(iconsByProvider.AWS).sort().forEach(subcat => {
-            const icons = iconsByProvider.AWS[subcat].slice(0, 30);
-            iconReference += `\n  ${subcat}:\n`;
-            icons.forEach(icon => {
-                iconReference += `    • ${icon.name}\n`;
-            });
-        });
-        
-        // Kubernetes icons
-        iconReference += '\n🔷 KUBERNETES ICONS (use lowercase abbreviations):\n';
-        iconsByProvider.Kubernetes.forEach(icon => {
-            iconReference += `  • ${icon.name}\n`;
-        });
-        
-        // Monitoring icons
-        iconReference += '\n🔷 MONITORING ICONS:\n';
-        iconsByProvider.Monitoring.forEach(icon => {
-            iconReference += `  • ${icon.name}\n`;
-        });
-
-        return `You are an expert cloud architecture diagram generator. Generate JSON definitions from markdown descriptions.
-
-PROVIDER-AWARE ICON SELECTION:
-- When you see AWS resources → use icons from AWS/ folder
-- When you see Kubernetes resources → use icons from Kubernetes/ folder  
-- When you see monitoring tools → use icons from Monitoring/ folder
-- Unknown resources → use General/ folder
-
-AVAILABLE ICONS:
-${iconReference}
-
-SMART ICON RULES:
-1. **AWS Resources**: Match service name to icon name
-   - "RDS database" → RDS.svg in AWS/Database/
-   - "EC2 instance" → EC2.svg in AWS/Compute/
-   - "EKS cluster" → Elastic-Kubernetes-Service.svg in AWS/Containers/
-   
-2. **Kubernetes Resources**: Use lowercase abbreviations
-   - "Deployment" → deploy.svg
-   - "Service" → svc.svg
-   - "Pod" → pod.svg
-   - "Ingress" → ing.svg
-   
-3. **IAM/Security**: ALL use Identity-and-Access-Management.svg
-   - IAM Role, Policy, User → AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg
-
-4. **Networking without specific icons**: Use Virtual-Private-Cloud.svg
-   - Internet Gateway, Subnet, Route Table → AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg
-   
-5. **Generic Resources**: Use General/ folder
-   - Security Group → General/Res_Firewall_48_Light.svg
-   - Generic server → General/Res_Server_48_Light.svg
-
-ICON PATH FORMAT:
-✅ CORRECT: "./assets/icons/AWS/Compute/EC2.svg"
-✅ CORRECT: "./assets/icons/Kubernetes/deploy.svg"
-❌ WRONG: "./assets/icons/AWS/EC2.svg" (missing category folder)
-❌ WRONG: "./assets/icons/Kubernetes/Deployment.svg" (should be lowercase abbreviation)
-
-JSON OUTPUT FORMAT:
-{
-  "nodes": [
-    {"id": "unique-id", "label": "Display Name", "type": "network|compute|container|security|storage|iam", 
-     "icon": "./assets/icons/[Provider]/[Category]/[Icon].svg", "parentNode": "optional-container-id"}
-  ],
-  "edges": [{"id": "e1", "source": "node1", "target": "node2", "label": "relationship"}]
-}
-
-GROUPING: Create container nodes (type="container", NO icon) for logical groups. Use "parentNode" to assign resources.
-
-CRITICAL REMINDERS:
-- AWS: ./assets/icons/AWS/[Category]/[Service].svg
-- Kubernetes: ./assets/icons/Kubernetes/[abbreviation].svg (lowercase: deploy, svc, pod, ing, cm, secret)
-- IAM/Identity: ALL use ./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg
-- Networking (IGW, Subnet, Route Table): Use ./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg
-- Security Group: ./assets/icons/General/Res_Firewall_48_Light.svg
-- Unknown resources: omit icon field or use General/Res_*_48_Light.svg
-
-Return ONLY valid JSON. No explanations.
-
-USER'S ARCHITECTURE DESCRIPTION:
-`;
-    }
-
     async generateJSON() {
         if (!this.markdownFiles || this.markdownFiles.length === 0) {
             showToast('error', 'Please upload markdown file(s) first');
@@ -466,16 +331,23 @@ USER'S ARCHITECTURE DESCRIPTION:
         generateBtn.disabled = true;
 
         try {
-            // Combine all markdown files into one prompt
+            // Combine all markdown files
             let combinedMarkdown = '';
             this.markdownFiles.forEach((file, index) => {
                 combinedMarkdown += `\n\n### Source File ${index + 1}: ${file.name}\n\n`;
                 combinedMarkdown += file.content;
             });
             
-            const prompt = this.buildSystemPrompt() + '\n\n' + combinedMarkdown;
+            // Build prompt using AIPromptBuilder module
+            const prompt = this.promptBuilder.buildSystemPrompt() + '\n\n' + combinedMarkdown;
             
-            console.log('Sending request to Ollama via proxy...');
+            console.log('Generating JSON with Ollama...');
+            console.log(`📝 Markdown size: ${combinedMarkdown.length} characters`);
+            console.log('⏳ This may take 1-5 minutes for complex architectures...');
+            
+            // Create abort controller for timeout (5 minutes)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 300000);
             
             const response = await fetch('/api/ollama', {
                 method: 'POST',
@@ -490,8 +362,11 @@ USER'S ARCHITECTURE DESCRIPTION:
                         temperature: 0.1,
                         top_p: 0.9
                     }
-                })
+                }),
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -513,8 +388,8 @@ USER'S ARCHITECTURE DESCRIPTION:
             // Parse and validate JSON
             this.generatedJSON = JSON.parse(jsonText);
             
-            // Validate and auto-fix icon paths
-            this.generatedJSON = this.validateAndFixIcons(this.generatedJSON);
+            // Validate and auto-fix icon paths using IconValidator module
+            this.generatedJSON = this.iconValidator.validateAndFixIcons(this.generatedJSON);
             
             // Display the result
             this.displayGeneratedJSON(this.generatedJSON);
@@ -522,84 +397,19 @@ USER'S ARCHITECTURE DESCRIPTION:
             showToast('success', 'JSON generated successfully!');
         } catch (error) {
             console.error('Error generating JSON:', error);
-            showToast('error', 'Failed to generate JSON: ' + error.message);
+            
+            if (error.name === 'AbortError') {
+                showToast('error', 'Generation timed out (5 min limit). Try a simpler architecture.');
+            } else if (error.message.includes('timed out')) {
+                showToast('error', 'Ollama timed out. The architecture may be too complex. Try breaking it into smaller parts.');
+            } else {
+                showToast('error', 'Failed to generate JSON: ' + error.message);
+            }
+            
             loadingIndicator.style.display = 'none';
         } finally {
             generateBtn.disabled = false;
         }
-    }
-
-    // Runtime validation and auto-fix for icon paths
-    validateAndFixIcons(json) {
-        if (!json.nodes) return json;
-        
-        let fixCount = 0;
-        json.nodes.forEach(node => {
-            if (!node.icon) return;
-            
-            // Check if icon file exists in our loaded icons
-            const iconExists = this.availableIcons.some(icon => 
-                node.icon.includes(icon.name + '.svg')
-            );
-            
-            if (!iconExists) {
-                console.warn(`⚠️  Icon not found: ${node.icon} for "${node.label}"`);
-                
-                // Try to find fallback
-                const fallback = this.findFallbackIcon(node);
-                if (fallback) {
-                    console.log(`   ✅ Using fallback: ${fallback}`);
-                    node.icon = fallback;
-                    fixCount++;
-                } else {
-                    console.log(`   ❌ No fallback found - removing icon field`);
-                    delete node.icon;
-                }
-            }
-        });
-        
-        if (fixCount > 0) {
-            showToast('info', `Auto-fixed ${fixCount} invalid icon path(s)`);
-        }
-        
-        return json;
-    }
-
-    // Smart fallback icon finder
-    findFallbackIcon(node) {
-        const label = (node.label || '').toLowerCase();
-        const type = node.type || '';
-        
-        // IAM/Security/Identity
-        if (/role|policy|iam|identity|access|user|permission/i.test(label)) {
-            return './assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg';
-        }
-        
-        // Networking
-        if (/vpc|subnet|route|gateway|network|internet/i.test(label)) {
-            return './assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg';
-        }
-        
-        // Security Group / Firewall
-        if (/security.group|firewall|sg|acl|nacl/i.test(label)) {
-            const firewall = this.availableIcons.find(i => i.name.includes('Firewall'));
-            return firewall ? firewall.path : './assets/icons/General/Res_Firewall_48_Light.svg';
-        }
-        
-        // Kubernetes resources
-        if (/deployment/i.test(label)) return './assets/icons/Kubernetes/deploy.svg';
-        if (/\bservice\b/i.test(label) && !/^aws/i.test(label)) return './assets/icons/Kubernetes/svc.svg';
-        if (/\bpod\b/i.test(label)) return './assets/icons/Kubernetes/pod.svg';
-        if (/ingress/i.test(label)) return './assets/icons/Kubernetes/ing.svg';
-        if (/configmap/i.test(label)) return './assets/icons/Kubernetes/cm.svg';
-        if (/secret/i.test(label)) return './assets/icons/Kubernetes/secret.svg';
-        
-        // Generic by type
-        if (type === 'compute') return './assets/icons/General/Res_Server_48_Light.svg';
-        if (type === 'database' || type === 'storage') return './assets/icons/General/Res_Database_48_Light.svg';
-        if (type === 'network') return './assets/icons/General/Res_Internet_48_Light.svg';
-        
-        return null;
     }
 
     displayGeneratedJSON(json) {
