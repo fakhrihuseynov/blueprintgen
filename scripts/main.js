@@ -227,6 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize diagram
     diagram = new DiagramGenerator();
     
+    // Initialize icon picker
+    window.iconPicker = new IconPicker(diagram);
+    
     // File upload listeners
     const fileUpload = document.getElementById('file-upload');
     const fileUploadWelcome = document.getElementById('file-upload-welcome');

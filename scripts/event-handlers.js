@@ -28,9 +28,38 @@ class EventHandlers {
     }
 
     onMouseDown(e) {
-        // Try to find node group using closest()
+        // Try to find container group or node group using closest()
+        const containerGroup = e.target.closest('.container-group');
         const nodeGroup = e.target.closest('.node-group');
         
+        // Handle container dragging
+        if (containerGroup && !nodeGroup) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.core.isDraggingNode = true;
+            this.core.draggedNode = containerGroup;
+            const containerId = containerGroup.getAttribute('data-container-id');
+            const pos = this.core.layout[containerId];
+            
+            if (!pos) return;
+            
+            // Get click position in SVG coordinates
+            const pt = this.core.svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgPt = pt.matrixTransform(this.core.svg.getScreenCTM().inverse());
+            
+            this.core.nodeDragStart = {
+                x: svgPt.x - pos.x,
+                y: svgPt.y - pos.y
+            };
+            
+            containerGroup.style.cursor = 'grabbing';
+            return;
+        }
+        
+        // Handle node dragging
         if (nodeGroup) {
             e.preventDefault();
             e.stopPropagation();
@@ -65,7 +94,7 @@ class EventHandlers {
     }
 
     onMouseMove(e) {
-        // Handle node dragging
+        // Handle node/container dragging
         if (this.core.isDraggingNode && this.core.draggedNode) {
             e.preventDefault();
             e.stopPropagation();
@@ -75,7 +104,9 @@ class EventHandlers {
             pt.y = e.clientY;
             const svgPt = pt.matrixTransform(this.core.svg.getScreenCTM().inverse());
             
-            const nodeId = this.core.draggedNode.getAttribute('data-node-id');
+            // Get ID from either data-node-id or data-container-id
+            const nodeId = this.core.draggedNode.getAttribute('data-node-id') || 
+                          this.core.draggedNode.getAttribute('data-container-id');
             if (!this.core.layout[nodeId]) return;
             
             const newX = svgPt.x - this.core.nodeDragStart.x;
@@ -84,6 +115,18 @@ class EventHandlers {
             // Update layout
             this.core.layout[nodeId].x = newX;
             this.core.layout[nodeId].y = newY;
+            
+            // If dragging container, update child positions
+            if (this.core.draggedNode.classList.contains('container-group')) {
+                this.core.nodes.filter(n => n.parentNode === nodeId).forEach(child => {
+                    if (this.core.layout[child.id]) {
+                        const childLayout = this.core.layout[child.id];
+                        // Children move relative to container
+                        childLayout.x = newX + (childLayout.offsetX || 0);
+                        childLayout.y = newY + (childLayout.offsetY || 0);
+                    }
+                });
+            }
             
             // Redraw diagram
             this.core.redrawDiagram();

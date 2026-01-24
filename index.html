@@ -320,6 +320,30 @@
             </svg>
             <span id="success-message"></span>
         </div>
+        
+        <!-- Icon Picker Modal -->
+        <div id="icon-picker-modal" class="modal" style="display: none;">
+            <div class="modal-content icon-picker-content">
+                <div class="modal-header">
+                    <h3>Select Icon</h3>
+                    <button class="close-btn" onclick="closeIconPicker()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="icon-picker-search">
+                        <input type="text" id="icon-search" placeholder="Search icons..." />
+                        <select id="icon-category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="AWS">AWS</option>
+                            <option value="GCP">GCP</option>
+                            <option value="Kubernetes">Kubernetes</option>
+                            <option value="Monitoring">Monitoring</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    <div id="icon-picker-grid" class="icon-picker-grid"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
 <!-- Application Modules -->
@@ -327,6 +351,7 @@
     <script src="scripts/layout-engine.js"></script>
     <script src="scripts/event-handlers.js"></script>
     <script src="scripts/diagram-core.js"></script>
+    <script src="scripts/icon-picker.js"></script>
     <script src="scripts/main.js"></script>
     
     <!-- AI Generator Modules (load in dependency order) -->

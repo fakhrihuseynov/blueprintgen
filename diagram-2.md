@@ -25,7 +25,11 @@
 - Node CNI Policy Attachment (`aws_iam_role_policy_attachment.node_cni`)
 
 ### Kubernetes Workloads
-- Deployment: `nginx-deployment` (3 replicas) — namespace `my-namespace`
+- Will create 3 pods with 3 replicaset
+- 1 Deployment file which deploys nginx pods
+- 1 service which creates load-balancer in AWS
+- 1 Ingress service which redirects and opens port to the world with port 80
+- 1 Control plane eksctl, 2 Worker nodes which are ec2 instances 
 
 ## Relationships
 1. `aws_vpc.this` → `aws_internet_gateway.igw` — attached

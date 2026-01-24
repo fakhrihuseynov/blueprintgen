@@ -201,10 +201,16 @@ QUALITY REQUIREMENTS:
 1. **Be COMPREHENSIVE**: Include ALL resources mentioned in the markdown
 2. **Use DESCRIPTIVE labels**: Not just "VPC" but include meaningful context when available
 3. **Create LOGICAL grouping**: Use parentNode to organize resources hierarchically
+   - ALWAYS create container nodes for logical boundaries (VPC, EKS Cluster, Namespaces, etc.)
+   - Group related resources together (all EC2 in one container, all databases in another)
+   - Container examples: "Network Layer", "Compute Tier", "Data Layer", "Production Environment"
 4. **Connect EVERYTHING**: Create edges showing relationships between related resources
 5. **Match EXACT icon names**: Use the icon names from the list above, don't invent new ones
 
 GROUPING: Create container nodes (type="container", NO icon) for logical groups like "Production Environment", "Network Layer", etc. Use "parentNode" to assign child resources.
+
+IMPORTANT: When you see hierarchical structures in markdown (like VPC containing Subnets, EKS containing Namespaces), 
+ALWAYS create container nodes for the parent elements. This makes diagrams cleaner and more organized.
 
 CRITICAL REMINDERS:
 - AWS: ./assets/icons/AWS/[Category]/[Service].svg

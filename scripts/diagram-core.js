@@ -53,6 +53,8 @@ class DiagramGenerator {
     drawContainer(node, pos) {
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.setAttribute('class', 'container-group');
+        g.setAttribute('data-container-id', node.id);
+        g.style.cursor = 'grab';
         
         // Container rectangle with dotted border
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -123,7 +125,17 @@ class DiagramGenerator {
             image.setAttribute('height', iconSize);
             image.setAttribute('href', node.icon);
             image.setAttribute('class', 'node-icon');
-            image.style.pointerEvents = 'none';
+            image.style.cursor = 'pointer';
+            image.style.pointerEvents = 'auto';
+            
+            // Make icon clickable to open icon picker
+            image.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent dragging when clicking icon
+                if (window.iconPicker) {
+                    window.iconPicker.open(node.id);
+                }
+            });
+            
             g.appendChild(image);
         }
         
