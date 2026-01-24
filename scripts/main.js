@@ -144,8 +144,32 @@ async function downloadDiagram() {
             return;
         }
         
+        showToast('info', 'Preparing export... This may take a moment.');
+        
         // Clone SVG
         const svgClone = svgElement.cloneNode(true);
+        
+        // Convert all image elements to data URIs (embed icons)
+        const images = svgClone.querySelectorAll('image');
+        const imagePromises = Array.from(images).map(async (img) => {
+            const href = img.getAttribute('href');
+            if (!href) return;
+            
+            try {
+                // Fetch the SVG file
+                const response = await fetch(href);
+                const svgText = await response.text();
+                
+                // Convert to base64 data URI
+                const base64 = btoa(unescape(encodeURIComponent(svgText)));
+                img.setAttribute('href', `data:image/svg+xml;base64,${base64}`);
+            } catch (error) {
+                console.warn(`Failed to embed image: ${href}`, error);
+            }
+        });
+        
+        // Wait for all images to be embedded
+        await Promise.all(imagePromises);
         
         // Embed styles
         const styles = document.createElement('style');
@@ -173,6 +197,12 @@ async function downloadDiagram() {
         svgClone.setAttribute('width', bbox.width + padding * 2);
         svgClone.setAttribute('height', bbox.height + padding * 2);
         
+        // Remove transforms from clone for export
+        const groupClone = svgClone.querySelector('#diagram-group');
+        if (groupClone) {
+            groupClone.removeAttribute('transform');
+        }
+        
         // Serialize SVG
         const svgData = new XMLSerializer().serializeToString(svgClone);
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
@@ -184,15 +214,20 @@ async function downloadDiagram() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            canvas.width = bbox.width + padding * 2;
-            canvas.height = bbox.height + padding * 2;
+            // Use higher resolution for better quality
+            const scale = 2;
+            canvas.width = (bbox.width + padding * 2) * scale;
+            canvas.height = (bbox.height + padding * 2) * scale;
+            
+            // Scale context
+            ctx.scale(scale, scale);
             
             // White background
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // Draw image
-            ctx.drawImage(img, 0, 0);
+            ctx.drawImage(img, 0, 0, bbox.width + padding * 2, bbox.height + padding * 2);
             
             // Export as PNG
             canvas.toBlob(blob => {

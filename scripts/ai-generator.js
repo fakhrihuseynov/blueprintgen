@@ -61,7 +61,7 @@ class AIGenerator {
             }
             
             // Load Kubernetes, Monitoring, General, GCP (flat structure, all SVG)
-            const flatFolders = ['Kubernetes', 'Monitoring', 'General', 'GCP'];
+            const flatFolders = ['Kubernetes', 'Monitoring', 'General', 'GCP', 'Azure'];
             for (const folder of flatFolders) {
                 try {
                     const response = await fetch(`./assets/icons/${folder}/`);

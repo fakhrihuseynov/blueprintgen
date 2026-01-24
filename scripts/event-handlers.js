@@ -28,6 +28,39 @@ class EventHandlers {
     }
 
     onMouseDown(e) {
+        // Check for resize handles first
+        const resizeHandle = e.target.closest('.resize-handle');
+        if (resizeHandle) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            this.core.isResizing = true;
+            this.core.resizeHandle = resizeHandle;
+            const containerId = resizeHandle.getAttribute('data-container-id');
+            this.core.resizeType = resizeHandle.getAttribute('data-resize-type');
+            this.core.resizeContainerId = containerId;
+            
+            const pos = this.core.layout[containerId];
+            if (!pos) return;
+            
+            // Get click position in SVG coordinates
+            const pt = this.core.svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgPt = pt.matrixTransform(this.core.svg.getScreenCTM().inverse());
+            
+            this.core.resizeStart = {
+                x: svgPt.x,
+                y: svgPt.y,
+                width: pos.width,
+                height: pos.height,
+                containerX: pos.x,
+                containerY: pos.y
+            };
+            
+            return;
+        }
+        
         // Try to find container group or node group using closest()
         const containerGroup = e.target.closest('.container-group');
         const nodeGroup = e.target.closest('.node-group');
@@ -103,6 +136,40 @@ class EventHandlers {
     }
 
     onMouseMove(e) {
+        // Handle container resizing
+        if (this.core.isResizing && this.core.resizeContainerId) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const pt = this.core.svg.createSVGPoint();
+            pt.x = e.clientX;
+            pt.y = e.clientY;
+            const svgPt = pt.matrixTransform(this.core.svg.getScreenCTM().inverse());
+            
+            const deltaX = svgPt.x - this.core.resizeStart.x;
+            const deltaY = svgPt.y - this.core.resizeStart.y;
+            
+            const layout = this.core.layout[this.core.resizeContainerId];
+            if (!layout) return;
+            
+            // Apply resize based on handle type
+            const minWidth = 200;
+            const minHeight = 150;
+            
+            if (this.core.resizeType === 'right') {
+                layout.width = Math.max(minWidth, this.core.resizeStart.width + deltaX);
+            } else if (this.core.resizeType === 'bottom') {
+                layout.height = Math.max(minHeight, this.core.resizeStart.height + deltaY);
+            } else if (this.core.resizeType === 'bottom-right') {
+                layout.width = Math.max(minWidth, this.core.resizeStart.width + deltaX);
+                layout.height = Math.max(minHeight, this.core.resizeStart.height + deltaY);
+            }
+            
+            // Redraw diagram
+            this.core.redrawDiagram();
+            return;
+        }
+        
         // Handle node/container dragging
         if (this.core.isDraggingNode && this.core.draggedNode) {
             e.preventDefault();
@@ -153,6 +220,15 @@ class EventHandlers {
     }
 
     onMouseUp() {
+        // Reset resize state
+        if (this.core.isResizing) {
+            this.core.isResizing = false;
+            this.core.resizeHandle = null;
+            this.core.resizeContainerId = null;
+            this.core.resizeType = null;
+            this.core.resizeStart = null;
+        }
+        
         if (this.core.isDraggingNode) {
             this.core.isDraggingNode = false;
             if (this.core.draggedNode) {

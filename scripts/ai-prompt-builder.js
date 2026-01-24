@@ -42,6 +42,7 @@ class AIPromptBuilder {
         // Organize icons by provider and category
         const iconsByProvider = {
             AWS: {},
+            Azure: [],
             GCP: [],
             Kubernetes: [],
             Monitoring: [],
@@ -54,6 +55,8 @@ class AIPromptBuilder {
                     iconsByProvider.AWS[icon.subcategory] = [];
                 }
                 iconsByProvider.AWS[icon.subcategory].push(icon);
+            } else if (icon.category === 'Azure') {
+                iconsByProvider.Azure.push(icon);
             } else if (icon.category === 'GCP') {
                 iconsByProvider.GCP.push(icon);
             } else if (icon.category === 'Kubernetes') {
@@ -83,6 +86,18 @@ class AIPromptBuilder {
         iconsByProvider.Kubernetes.forEach(icon => {
             iconReference += `  • ${icon.name}\n`;
         });
+        
+        // Azure icons (show first 40)
+        if (iconsByProvider.Azure.length > 0) {
+            iconReference += '\n🔷 AZURE ICONS (Microsoft Azure):\n';
+            const azureIcons = iconsByProvider.Azure.slice(0, 40);
+            azureIcons.forEach(icon => {
+                iconReference += `  • ${icon.name}\n`;
+            });
+            if (iconsByProvider.Azure.length > 40) {
+                iconReference += `  • (and ${iconsByProvider.Azure.length - 40} more Azure icons)\n`;
+            }
+        }
         
         // GCP icons (show first 40, grouped logically)
         iconReference += '\n🔷 GCP ICONS (Google Cloud Platform):\n';

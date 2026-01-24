@@ -15,6 +15,14 @@ class DiagramGenerator {
         this.dragStartX = 0;
         this.dragStartY = 0;
         this.draggedNode = null;
+        this.nodeDragStart = null;
+        
+        // Resize state
+        this.isResizing = false;
+        this.resizeHandle = null;
+        this.resizeContainerId = null;
+        this.resizeType = null;
+        this.resizeStart = null;
         
         // Instantiate sub-modules
         this.layoutEngine = new LayoutEngine();
@@ -78,6 +86,29 @@ class DiagramGenerator {
         rect.setAttribute('class', 'container-rect');
         rect.setAttribute('stroke-dasharray', '8,4');
         g.appendChild(rect);
+        
+        // Add resize handles (invisible but interactive)
+        const handleSize = 20;
+        const handles = [
+            { cursor: 'ew-resize', x: pos.x + pos.width, y: pos.y + pos.height/2, type: 'right' },
+            { cursor: 'ns-resize', x: pos.x + pos.width/2, y: pos.y + pos.height, type: 'bottom' },
+            { cursor: 'nwse-resize', x: pos.x + pos.width, y: pos.y + pos.height, type: 'bottom-right' }
+        ];
+        
+        handles.forEach(handle => {
+            const handleRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            handleRect.setAttribute('x', handle.x - handleSize/2);
+            handleRect.setAttribute('y', handle.y - handleSize/2);
+            handleRect.setAttribute('width', handleSize);
+            handleRect.setAttribute('height', handleSize);
+            handleRect.setAttribute('fill', 'transparent');
+            handleRect.setAttribute('class', 'resize-handle');
+            handleRect.setAttribute('data-resize-type', handle.type);
+            handleRect.setAttribute('data-container-id', node.id);
+            handleRect.style.cursor = handle.cursor;
+            handleRect.style.pointerEvents = 'auto';
+            g.appendChild(handleRect);
+        });
         
         // Label at top-left (wrapped)
         const labelLines = this.wrapText(node.label, 2);
