@@ -2,6 +2,17 @@
 // Hierarchical and container-based layout algorithms
 
 class LayoutEngine {
+    // Utility: Calculate number of lines for wrapped text (max 2 words per line)
+    calculateTextLines(text) {
+        const words = text.split(/\s+/);
+        return Math.ceil(words.length / 2);
+    }
+    
+    // Utility: Estimate text width (roughly)
+    estimateTextWidth(text, fontSize = 12) {
+        return text.length * fontSize * 0.6;
+    }
+    
     calculateLayout(nodes, edges) {
         // Check if we have containers (like VPC, K8s namespaces)
         const containers = nodes.filter(n => n.type === 'container');
@@ -26,6 +37,11 @@ class LayoutEngine {
         containers.forEach((node) => {
             const children = nodes.filter(n => n.parentNode === node.id);
             
+            // Calculate label dimensions for proper container sizing
+            const labelLines = this.calculateTextLines(node.label);
+            const labelWidth = this.estimateTextWidth(node.label, 14);
+            const headerHeight = 28 + (labelLines * 16) + (node.subtitle ? this.calculateTextLines(node.subtitle) * 14 : 0);
+            
             // Dynamic sizing based on child count
             const childCount = children.length;
             const rowLayout = node.layout === 'row'; // Use row layout if specified
@@ -36,14 +52,15 @@ class LayoutEngine {
                 // Single row layout for small containers
                 cols = childCount;
                 rows = 1;
-                containerWidth = Math.max(300, cols * 150 + 100);
-                containerHeight = 180;
+                // Ensure width accommodates both children and label
+                containerWidth = Math.max(300, cols * 150 + 100, labelWidth + 100);
+                containerHeight = Math.max(180, headerHeight + 120);
             } else {
                 // Grid layout for larger containers
                 cols = Math.min(4, Math.ceil(Math.sqrt(childCount)));
                 rows = Math.ceil(childCount / cols);
-                containerWidth = cols * 150 + 100;
-                containerHeight = rows * 140 + 80;
+                containerWidth = Math.max(cols * 150 + 100, labelWidth + 100);
+                containerHeight = Math.max(rows * 140 + 80, headerHeight + rows * 140);
             }
             
             layout[node.id] = {
@@ -54,13 +71,16 @@ class LayoutEngine {
                 type: 'container'
             };
             
-            // Layout children within container
+            // Layout children within container (increased vertical spacing for wrapped labels)
             children.forEach((child, childIndex) => {
                 const col = childIndex % cols;
                 const row = Math.floor(childIndex / cols);
+                const childLabelLines = this.calculateTextLines(child.label);
+                const verticalSpacing = 130 + (childLabelLines > 1 ? 20 : 0); // Extra space if label wraps
+                
                 layout[child.id] = {
                     x: layout[node.id].x + 50 + col * 150,
-                    y: layout[node.id].y + 50 + row * 130,
+                    y: layout[node.id].y + headerHeight + 20 + row * verticalSpacing,
                     width: 70,
                     height: 70,
                     type: 'node'

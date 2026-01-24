@@ -37,6 +37,18 @@ class DiagramGenerator {
     }
 
     // Drawing methods
+    // Utility: Wrap text with max 2 words per line
+    wrapText(text, maxWordsPerLine = 2) {
+        const words = text.split(/\s+/);
+        const lines = [];
+        
+        for (let i = 0; i < words.length; i += maxWordsPerLine) {
+            lines.push(words.slice(i, i + maxWordsPerLine).join(' '));
+        }
+        
+        return lines;
+    }
+
     drawNodes(layout) {
         this.nodes.forEach(node => {
             const pos = layout[node.id];
@@ -67,22 +79,29 @@ class DiagramGenerator {
         rect.setAttribute('stroke-dasharray', '8,4');
         g.appendChild(rect);
         
-        // Label at top-left
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', pos.x + 20);
-        text.setAttribute('y', pos.y + 28);
-        text.setAttribute('class', 'container-label');
-        text.textContent = node.label;
-        g.appendChild(text);
+        // Label at top-left (wrapped)
+        const labelLines = this.wrapText(node.label, 2);
+        labelLines.forEach((line, index) => {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', pos.x + 20);
+            text.setAttribute('y', pos.y + 28 + (index * 16));
+            text.setAttribute('class', 'container-label');
+            text.textContent = line;
+            g.appendChild(text);
+        });
         
         // Subtitle below label
         if (node.subtitle) {
-            const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            subtitle.setAttribute('x', pos.x + 20);
-            subtitle.setAttribute('y', pos.y + 44);
-            subtitle.setAttribute('class', 'container-subtitle');
-            subtitle.textContent = node.subtitle;
-            g.appendChild(subtitle);
+            const subtitleLines = this.wrapText(node.subtitle, 2);
+            const labelHeight = labelLines.length * 16;
+            subtitleLines.forEach((line, index) => {
+                const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                subtitle.setAttribute('x', pos.x + 20);
+                subtitle.setAttribute('y', pos.y + 28 + labelHeight + (index * 14));
+                subtitle.setAttribute('class', 'container-subtitle');
+                subtitle.textContent = line;
+                g.appendChild(subtitle);
+            });
         }
         
         this.group.appendChild(g);
@@ -139,26 +158,33 @@ class DiagramGenerator {
             g.appendChild(image);
         }
         
-        // Label BELOW the box
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', pos.x + pos.width / 2);
-        text.setAttribute('y', pos.y + pos.height + 18);
-        text.setAttribute('class', 'node-label');
-        text.setAttribute('text-anchor', 'middle');
-        text.style.pointerEvents = 'none';
-        text.textContent = node.label;
-        g.appendChild(text);
+        // Label BELOW the box (wrapped with max 2 words per line)
+        const labelLines = this.wrapText(node.label, 2);
+        labelLines.forEach((line, index) => {
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', pos.x + pos.width / 2);
+            text.setAttribute('y', pos.y + pos.height + 18 + (index * 14));
+            text.setAttribute('class', 'node-label');
+            text.setAttribute('text-anchor', 'middle');
+            text.style.pointerEvents = 'none';
+            text.textContent = line;
+            g.appendChild(text);
+        });
         
-        // Subtitle BELOW the label
+        // Subtitle BELOW the label (wrapped)
         if (node.subtitle) {
-            const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            subtitle.setAttribute('x', pos.x + pos.width / 2);
-            subtitle.setAttribute('y', pos.y + pos.height + 32);
-            subtitle.setAttribute('class', 'node-subtitle');
-            subtitle.setAttribute('text-anchor', 'middle');
-            subtitle.style.pointerEvents = 'none';
-            subtitle.textContent = node.subtitle;
-            g.appendChild(subtitle);
+            const subtitleLines = this.wrapText(node.subtitle, 2);
+            const labelHeight = labelLines.length * 14;
+            subtitleLines.forEach((line, index) => {
+                const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                subtitle.setAttribute('x', pos.x + pos.width / 2);
+                subtitle.setAttribute('y', pos.y + pos.height + 18 + labelHeight + (index * 12));
+                subtitle.setAttribute('class', 'node-subtitle');
+                subtitle.setAttribute('text-anchor', 'middle');
+                subtitle.style.pointerEvents = 'none';
+                subtitle.textContent = line;
+                g.appendChild(subtitle);
+            });
         }
         
         this.group.appendChild(g);

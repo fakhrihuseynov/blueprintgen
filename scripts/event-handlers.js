@@ -44,6 +44,15 @@ class EventHandlers {
             
             if (!pos) return;
             
+            // Store child offsets relative to container before dragging
+            this.core.nodes.filter(n => n.parentNode === containerId).forEach(child => {
+                if (this.core.layout[child.id]) {
+                    const childPos = this.core.layout[child.id];
+                    childPos.offsetX = childPos.x - pos.x;
+                    childPos.offsetY = childPos.y - pos.y;
+                }
+            });
+            
             // Get click position in SVG coordinates
             const pt = this.core.svg.createSVGPoint();
             pt.x = e.clientX;
@@ -116,14 +125,16 @@ class EventHandlers {
             this.core.layout[nodeId].x = newX;
             this.core.layout[nodeId].y = newY;
             
-            // If dragging container, update child positions
+            // If dragging container, update child positions using stored offsets
             if (this.core.draggedNode.classList.contains('container-group')) {
                 this.core.nodes.filter(n => n.parentNode === nodeId).forEach(child => {
                     if (this.core.layout[child.id]) {
                         const childLayout = this.core.layout[child.id];
-                        // Children move relative to container
-                        childLayout.x = newX + (childLayout.offsetX || 0);
-                        childLayout.y = newY + (childLayout.offsetY || 0);
+                        // Maintain child position relative to container using pre-stored offsets
+                        if (childLayout.offsetX !== undefined && childLayout.offsetY !== undefined) {
+                            childLayout.x = newX + childLayout.offsetX;
+                            childLayout.y = newY + childLayout.offsetY;
+                        }
                     }
                 });
             }
