@@ -197,10 +197,18 @@ JSON OUTPUT FORMAT:
   "edges": [{"id": "e1", "source": "node1", "target": "node2", "label": "relationship"}]
 }
 
-GROUPING: Create container nodes (type="container", NO icon) for logical groups. Use "parentNode" to assign resources.
+QUALITY REQUIREMENTS:
+1. **Be COMPREHENSIVE**: Include ALL resources mentioned in the markdown
+2. **Use DESCRIPTIVE labels**: Not just "VPC" but include meaningful context when available
+3. **Create LOGICAL grouping**: Use parentNode to organize resources hierarchically
+4. **Connect EVERYTHING**: Create edges showing relationships between related resources
+5. **Match EXACT icon names**: Use the icon names from the list above, don't invent new ones
+
+GROUPING: Create container nodes (type="container", NO icon) for logical groups like "Production Environment", "Network Layer", etc. Use "parentNode" to assign child resources.
 
 CRITICAL REMINDERS:
 - AWS: ./assets/icons/AWS/[Category]/[Service].svg
+- GCP: ./assets/icons/GCP/[Service].svg (e.g., Compute-Engine, Cloud-Storage, BigQuery)
 - Kubernetes: ./assets/icons/Kubernetes/[abbreviation].svg (lowercase: deploy, svc, pod, ing, cm, secret)
 - Monitoring: ./assets/icons/Monitoring/[tool].svg (CloudWatch, prometheus, grafana, kibana, datadog, splunk, etc.)
 - Alarms: ./assets/icons/General/[Alarm-Type].svg (High-CPU-Alarm, Error-Rate-Alarm, Alert_48_Light)
@@ -208,8 +216,9 @@ CRITICAL REMINDERS:
 - Security Group: ./assets/icons/AWS/Security-Identity-Compliance/Network-Firewall.svg (NOT General/Firewall!)
 - WAF/Shield: ./assets/icons/AWS/Security-Identity-Compliance/[WAF|Shield].svg
 - Networking (VPC, IGW, Subnet, Route Table, NAT): ./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg
+- Load Balancer: ./assets/icons/AWS/Networking-Content-Delivery/Elastic-Load-Balancing.svg
 - General icons: NO "Res_" prefix (e.g., Server_48_Light.svg, NOT Res_Server_48_Light.svg)
-- ALWAYS prefer AWS-specific icons over General folder
+- ALWAYS prefer provider-specific icons (AWS/GCP) over General folder
 - If you can't find exact AWS icon → use appropriate AWS category icon as fallback
 - Only use General/ as last resort for truly generic resources
 
