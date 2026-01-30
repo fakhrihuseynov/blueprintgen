@@ -271,40 +271,35 @@ class DiagramGenerator {
                 y2 = targetPos.y + targetPos.height / 2;
             }
             
-            // Create orthogonal path with curved corners
+            // Create smooth curved paths with simplified bezier
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d;
-            const curveRadius = 15; // Add rounded corners to reduce harsh angles
             
             if (isTargetBelow || isTargetAbove) {
-                const midY = (y1 + y2) / 2;
+                // Vertical connections with gentle curves
                 if (Math.abs(x2 - x1) < 10) {
+                    // Straight line for aligned nodes
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    // Add curves using quadratic bezier
-                    const offsetX = x2 - x1;
-                    const curveOffset = Math.min(Math.abs(offsetX) / 4, curveRadius);
+                    // Simple S-curve with moderate control distance
+                    const controlDist = Math.min(Math.abs(y2 - y1) / 4, 40);
+                    const midY = (y1 + y2) / 2;
                     d = `M ${x1} ${y1} 
-                         L ${x1} ${midY - curveOffset}
-                         Q ${x1} ${midY} ${x1 + Math.sign(offsetX) * curveOffset} ${midY}
-                         L ${x2 - Math.sign(offsetX) * curveOffset} ${midY}
-                         Q ${x2} ${midY} ${x2} ${midY + curveOffset}
-                         L ${x2} ${y2}`;
+                         C ${x1} ${y1 + controlDist}, ${x1} ${midY}, ${(x1 + x2) / 2} ${midY}
+                         C ${x2} ${midY}, ${x2} ${y2 - controlDist}, ${x2} ${y2}`;
                 }
             } else {
-                const midX = (x1 + x2) / 2;
+                // Horizontal connections with gentle curves
                 if (Math.abs(y2 - y1) < 10) {
+                    // Straight line for aligned nodes
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    // Add curves using quadratic bezier
-                    const offsetY = y2 - y1;
-                    const curveOffset = Math.min(Math.abs(offsetY) / 4, curveRadius);
+                    // Simple S-curve with moderate control distance
+                    const controlDist = Math.min(Math.abs(x2 - x1) / 4, 40);
+                    const midX = (x1 + x2) / 2;
                     d = `M ${x1} ${y1}
-                         L ${midX - curveOffset} ${y1}
-                         Q ${midX} ${y1} ${midX} ${y1 + Math.sign(offsetY) * curveOffset}
-                         L ${midX} ${y2 - Math.sign(offsetY) * curveOffset}
-                         Q ${midX} ${y2} ${midX + curveOffset} ${y2}
-                         L ${x2} ${y2}`;
+                         C ${x1 + controlDist} ${y1}, ${midX} ${y1}, ${midX} ${(y1 + y2) / 2}
+                         C ${midX} ${y2}, ${x2 - controlDist} ${y2}, ${x2} ${y2}`;
                 }
             }
             

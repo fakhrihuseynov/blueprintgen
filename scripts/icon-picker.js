@@ -68,7 +68,7 @@ class IconPicker {
         // Extract category from path: ./assets/icons/AWS/...
         const parts = path.split('/');
         if (parts.length >= 4) {
-            return parts[3]; // AWS, GCP, Kubernetes, Monitoring, General
+            return parts[3]; // AWS, GCP, Kubernetes, Monitoring, General, Azure
         }
         return 'Other';
     }

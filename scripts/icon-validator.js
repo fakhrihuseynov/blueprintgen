@@ -2,8 +2,9 @@
 // Validates AI-generated icon paths and provides intelligent fallbacks
 
 class IconValidator {
-    constructor(availableIcons) {
+    constructor(availableIcons, cloudStack = null) {
         this.availableIcons = availableIcons;
+        this.cloudStack = cloudStack;
     }
 
     // Runtime validation and auto-fix for icon paths
@@ -78,13 +79,85 @@ class IconValidator {
             return './assets/icons/General/Metrics_48_Light.svg';
         }
         
-        // IAM/Security/Identity Resources
-        if (/role|policy|iam|identity|access|user|permission/i.test(label)) {
+        // Container nodes fallback - EVERY container gets an icon!
+        if (node.type === 'container') {
+            // Logical grouping containers
+            if (/network.layer|network.tier/i.test(label)) {
+                return './assets/icons/General/Folder_48_Light.svg';
+            }
+            if (/compute.tier|compute.layer/i.test(label)) {
+                return './assets/icons/General/Folder_48_Light.svg';
+            }
+            if (/data.layer|data.tier|database.layer/i.test(label)) {
+                return './assets/icons/General/Folder_48_Light.svg';
+            }
+            if (/production|staging|development|environment/i.test(label)) {
+                return './assets/icons/General/Folder_48_Light.svg';
+            }
+            if (/deployment|kubernetes.deployment/i.test(label)) {
+                return './assets/icons/Kubernetes/deploy.svg';
+            }
+            if (/service|kubernetes.service/i.test(label)) {
+                return './assets/icons/Kubernetes/svc.svg';
+            }
+            // Default container fallback
+            return './assets/icons/General/Folder_48_Light.svg';
+        }
+        
+        // Azure-specific resources (when Cloud Stack is Azure)
+        if (this.cloudStack === 'Azure') {
+            // Azure Kubernetes/AKS
+            if (/kubernetes|aks/i.test(label)) {
+                return this.findAzureIcon('Kubernetes-Services', 'containers') || 
+                       this.findAzureIcon('Kubernetes-Services', 'compute');
+            }
+            // Azure Virtual Network
+            if (/virtual.network|vnet/i.test(label)) {
+                return this.findAzureIcon('Virtual-Networks', 'networking');
+            }
+            // Azure Subnet
+            if (/subnet/i.test(label)) {
+                return this.findAzureIcon('Subnet', 'networking');
+            }
+            // Azure Storage Account
+            if (/storage.account|storage/i.test(label)) {
+                return this.findAzureIcon('Storage-Accounts', 'storage');
+            }
+            // Azure Database/SQL
+            if (/sql|database|cosmos/i.test(label)) {
+                return this.findAzureIcon('SQL-Database', 'databases') ||
+                       this.findAzureIcon('Azure-Cosmos-DB', 'databases');
+            }
+            // Azure Container Registry
+            if (/container.registry|acr/i.test(label)) {
+                return this.findAzureIcon('Container-Registries', 'containers');
+            }
+            // Azure App Service
+            if (/app.service|web.app/i.test(label)) {
+                return this.findAzureIcon('App-Services', 'app services');
+            }
+        }
+        
+        // Azure resource prefix detection (azurerm_)
+        if (/azure|azurerm/i.test(label)) {
+            if (/kubernetes|aks/i.test(label)) {
+                return this.findAzureIcon('Kubernetes-Services', 'containers');
+            }
+            if (/virtual.network|vnet/i.test(label)) {
+                return this.findAzureIcon('Virtual-Networks', 'networking');
+            }
+            if (/subnet/i.test(label)) {
+                return this.findAzureIcon('Subnet', 'networking');
+            }
+        }
+        
+        // IAM/Security/Identity Resources (only if not Azure)
+        if (this.cloudStack !== 'Azure' && /role|policy|iam|identity|access|user|permission/i.test(label)) {
             return './assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg';
         }
         
-        // Networking Resources
-        if (/vpc|subnet|route|gateway|network|internet/i.test(label)) {
+        // Networking Resources (AWS fallback - only if not Azure)
+        if (this.cloudStack !== 'Azure' && /vpc|subnet|route|gateway|network|internet/i.test(label)) {
             return './assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg';
         }
         
@@ -135,5 +208,15 @@ class IconValidator {
         return this.availableIcons.find(icon => 
             icon.name.toLowerCase().includes(nameLower)
         );
+    }
+    
+    // Find Azure icon by name and category
+    findAzureIcon(iconName, category) {
+        const icon = this.availableIcons.find(icon => 
+            icon.category === 'Azure' && 
+            icon.subcategory === category &&
+            icon.name === iconName
+        );
+        return icon ? icon.path : null;
     }
 }

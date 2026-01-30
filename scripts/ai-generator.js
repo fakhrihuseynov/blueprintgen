@@ -19,9 +19,9 @@ class AIGenerator {
     async init() {
         await this.loadAvailableIcons();
         
-        // Initialize modules with loaded icons
+        // Initialize prompt builder with loaded icons
         this.promptBuilder = new AIPromptBuilder(this.availableIcons);
-        this.iconValidator = new IconValidator(this.availableIcons);
+        // Note: iconValidator will be initialized in generateJSON() with Cloud Stack context
         
         this.setupEventListeners();
     }
@@ -60,8 +60,41 @@ class AIGenerator {
                 }
             }
             
+            // Load Azure icons from nested categories (like AWS)
+            const azureCategories = ['ai + machine learning', 'analytics', 'app services', 'azure ecosystem', 
+                                    'azure stack', 'blockchain', 'compute', 'containers', 'databases', 'devops',
+                                    'hybrid + multicloud', 'identity', 'integration', 'intune', 'iot',
+                                    'management + governance', 'migrate', 'migration', 'mixed reality', 'mobile',
+                                    'networking', 'other', 'security', 'storage', 'web'];
+            
+            for (const category of azureCategories) {
+                try {
+                    // Use encodeURIComponent for fetch but plain path for storage
+                    const response = await fetch(`./assets/icons/Azure/${encodeURIComponent(category)}/`);
+                    const text = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(text, 'text/html');
+                    const links = doc.querySelectorAll('a');
+                    
+                    const icons = Array.from(links)
+                        .map(link => link.getAttribute('href'))
+                        .filter(href => href && href.endsWith('.svg'))
+                        .map(filename => ({
+                            name: filename.replace('.svg', ''),
+                            path: `./assets/icons/Azure/${category}/${filename}`,  // Store plain path!
+                            extension: 'svg',
+                            category: 'Azure',
+                            subcategory: category
+                        }));
+                    
+                    allIcons.push(...icons);
+                } catch (error) {
+                    console.warn(`Could not load Azure/${category}:`, error);
+                }
+            }
+            
             // Load Kubernetes, Monitoring, General, GCP (flat structure, all SVG)
-            const flatFolders = ['Kubernetes', 'Monitoring', 'General', 'GCP', 'Azure'];
+            const flatFolders = ['Kubernetes', 'Monitoring', 'General', 'GCP'];
             for (const folder of flatFolders) {
                 try {
                     const response = await fetch(`./assets/icons/${folder}/`);
@@ -338,8 +371,8 @@ class AIGenerator {
                 combinedMarkdown += file.content;
             });
             
-            // Build prompt using AIPromptBuilder module
-            const prompt = this.promptBuilder.buildSystemPrompt() + '\n\n' + combinedMarkdown;
+            // Build prompt using AIPromptBuilder module (pass markdown for Cloud Stack extraction)
+            const prompt = this.promptBuilder.buildSystemPrompt(combinedMarkdown) + '\n\n' + combinedMarkdown;
             
             console.log('Generating JSON with Ollama...');
             console.log(`📝 Markdown size: ${combinedMarkdown.length} characters`);
@@ -387,6 +420,9 @@ class AIGenerator {
             
             // Parse and validate JSON
             this.generatedJSON = JSON.parse(jsonText);
+            
+            // Initialize IconValidator with Cloud Stack context
+            this.iconValidator = new IconValidator(this.availableIcons, this.promptBuilder.cloudStack);
             
             // Validate and auto-fix icon paths using IconValidator module
             this.generatedJSON = this.iconValidator.validateAndFixIcons(this.generatedJSON);
