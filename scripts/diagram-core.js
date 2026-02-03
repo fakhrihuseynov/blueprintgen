@@ -271,35 +271,29 @@ class DiagramGenerator {
                 y2 = targetPos.y + targetPos.height / 2;
             }
             
-            // Create smooth curved paths with simplified bezier
+            // Create orthogonal paths with right angles (no curves)
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             let d;
             
             if (isTargetBelow || isTargetAbove) {
-                // Vertical connections with gentle curves
+                // Vertical connections with right angle
                 if (Math.abs(x2 - x1) < 10) {
-                    // Straight line for aligned nodes
+                    // Straight vertical line for aligned nodes
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    // Simple S-curve with moderate control distance
-                    const controlDist = Math.min(Math.abs(y2 - y1) / 4, 40);
+                    // Orthogonal path with horizontal segment in middle
                     const midY = (y1 + y2) / 2;
-                    d = `M ${x1} ${y1} 
-                         C ${x1} ${y1 + controlDist}, ${x1} ${midY}, ${(x1 + x2) / 2} ${midY}
-                         C ${x2} ${midY}, ${x2} ${y2 - controlDist}, ${x2} ${y2}`;
+                    d = `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`;
                 }
             } else {
-                // Horizontal connections with gentle curves
+                // Horizontal connections with right angle
                 if (Math.abs(y2 - y1) < 10) {
-                    // Straight line for aligned nodes
+                    // Straight horizontal line for aligned nodes
                     d = `M ${x1} ${y1} L ${x2} ${y2}`;
                 } else {
-                    // Simple S-curve with moderate control distance
-                    const controlDist = Math.min(Math.abs(x2 - x1) / 4, 40);
+                    // Orthogonal path with vertical segment in middle
                     const midX = (x1 + x2) / 2;
-                    d = `M ${x1} ${y1}
-                         C ${x1 + controlDist} ${y1}, ${midX} ${y1}, ${midX} ${(y1 + y2) / 2}
-                         C ${midX} ${y2}, ${x2 - controlDist} ${y2}, ${x2} ${y2}`;
+                    d = `M ${x1} ${y1} L ${midX} ${y1} L ${midX} ${y2} L ${x2} ${y2}`;
                 }
             }
             

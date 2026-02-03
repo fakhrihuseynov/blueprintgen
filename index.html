@@ -18,7 +18,7 @@
                     <circle cx="22" cy="10" r="2" fill="white"/>
                     <circle cx="22" cy="22" r="2" fill="white"/>
                 </svg>
-                <h1>Blueprint Generator</h1>
+                <h1 id="app-title" style="cursor: pointer;">Blueprint Generator</h1>
             </div>
             <div class="header-actions">
                 <label for="file-upload" class="btn btn-primary">
@@ -55,6 +55,15 @@
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
                     Export PNG
+                </button>
+                
+                <button id="export-svg" class="btn btn-secondary" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    Export SVG
                 </button>
             </div>
         </header>
@@ -353,6 +362,8 @@
     <script src="scripts/event-handlers.js"></script>
     <script src="scripts/diagram-core.js"></script>
     <script src="scripts/icon-picker.js"></script>
+    <!-- Visio exporter deprecated - using Draw.io export instead -->
+    <!-- <script src="scripts/visio-exporter.js"></script> -->
     <script src="scripts/main.js"></script>
     
     <!-- AI Generator Modules (load in dependency order) -->

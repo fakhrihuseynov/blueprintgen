@@ -348,6 +348,17 @@ JSON OUTPUT FORMAT:
 4. **If you can't find exact icon** → use category-appropriate fallback from SAME provider
 5. **Last resort only** → use General/ folder icons (Server, Database, Folder, etc.)
 
+🔍 PARSING COMPLEX DESCRIPTIONS:
+- If markdown lists multiple resources in one line ("Public Subnets: subnet-abc123, subnet-def456, subnet-ghi789")
+  → CREATE SEPARATE NODES for EACH resource:
+  ✅ CORRECT: 3 nodes: "Public Subnet 1", "Public Subnet 2", "Public Subnet 3"
+  ❌ WRONG: 1 node with label "Public Subnets: subnet-abc123, subnet-def456, subnet-ghi789"
+- If you see "X+" (like "Deployments: 15+ pods"), "multiple", or "10+":
+  → CREATE 2-3 representative nodes (e.g., "Deployment 1", "Deployment 2", "Deployment 3")
+  → Don't try to create 15 nodes, just show the pattern
+- Keep labels SHORT and CLEAR: \"Public Subnet 1\" NOT long aggregated descriptions
+- Use subtitle for technical IDs: {"label": "Public Subnet 1", "subtitle": "subnet-abc123"}
+
 QUALITY REQUIREMENTS:
 1. **Be COMPREHENSIVE**: Include ALL resources mentioned in the markdown
 2. **Use DESCRIPTIVE labels**: Not just "VPC" but include meaningful context when available

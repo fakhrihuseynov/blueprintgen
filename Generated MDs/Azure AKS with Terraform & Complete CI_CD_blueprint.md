@@ -1,4 +1,4 @@
-# Deployable Resources — Diagram (current)
+# Azure AKS Production Architecture
 
 ## Infrastructure Components
 
@@ -6,25 +6,37 @@
 Azure
 
 ### Network Layer
-- Virtual Network (`azurerm_virtual_network.aks_vnet`)
-- Subnet (`azurerm_subnet.public`)
-- Subnet (`azurerm_subnet.private`)
+- Main VPC (`azurerm_virtual_network.aks_vnet`)
+- Public Subnet 1 (`azurerm_subnet.public[0]`)
+- Private Subnet 1 (`azurerm_subnet.private[0]`)
+- Ingress Subnet 1 (`azurerm_subnet.ingress[0]`)
 
 ### Compute Layer
-- AKS Cluster (`azurerm_kubernetes_cluster.aks`)
+- AKS Cluster (`azurerm_kubernetes_cluster.aks_cluster`)
+- Blue Node Pool (`azurerm_kubernetes_cluster_node_pool.blue`)
+- Green Node Pool (`azurerm_kubernetes_cluster_node_pool.green`)
+
+### Identity & Access
+- AKS Cluster IAM Role (`azurerm_role_assignment.cluster_role`)
+- Node IAM Role (`azurerm_role_assignment.node_role`)
+- ALB Controller IAM Role (`azurerm_role_assignment.alb_controller_role`)
 
 ### Kubernetes Workloads
-- Kubernetes Deployment
-- Kubernetes Service
+- Default Namespace (`k8s-namespace-default`)
+- Sample App Deployment (`k8s-deploy-sample-app`)
+- Sample App Service (`k8s-svc-sample-app`)
+- Ingress Controller (`k8s-ingress-controller`)
 
 ## Relationships
-1. 10.0 → azurerm_virtual_network.aks_vnet — depends on
-2. azurerm_virtual_network.aks_vnet → azurerm_subnet.public — provides address space
-3. 10.0 → azurerm_subnet.public — depends on
-4. azurerm_virtual_network.aks_vnet → azurerm_subnet.private — provides address space
-5. 10.0 → azurerm_subnet.private — depends on
-6. Virtual Network (`azurerm_virtual_network.aks_vnet`) → AKS Cluster (`azurerm_kubernetes_cluster.aks`) — network isolation
-7. Subnet (`azurerm_subnet.public`) → AKS Cluster (`azurerm_kubernetes_cluster.aks`) — provides network addressing
-8. Subnet (`azurerm_subnet.private`) → AKS Cluster (`azurerm_kubernetes_cluster.aks`) — provides network addressing
-9. AKS Cluster (`azurerm_kubernetes_cluster.aks`) → Kubernetes Deployment — hosts workload
-10. AKS Cluster (`azurerm_kubernetes_cluster.aks`) → Kubernetes Service — hosts workload
+1. `azurerm_virtual_network.aks_vnet` → `azurerm_subnet.public[0]` — contains
+2. `azurerm_virtual_network.aks_vnet` → `azurerm_subnet.private[0]` — contains
+3. `azurerm_virtual_network.aks_vnet` → `azurerm_subnet.ingress[0]` — contains
+4. `azurerm_kubernetes_cluster.aks_cluster` → `azurerm_subnet.private[0]` — uses
+5. `azurerm_kubernetes_cluster_node_pool.blue` → `azurerm_kubernetes_cluster.aks_cluster` — part of
+6. `azurerm_kubernetes_cluster_node_pool.green` → `azurerm_kubernetes_cluster.aks_cluster` — part of
+7. `azurerm_role_assignment.cluster_role` → `azurerm_kubernetes_cluster.aks_cluster` — assigned to
+8. `azurerm_role_assignment.node_role` → `azurerm_kubernetes_cluster_node_pool.blue` — assigned to
+9. `azurerm_role_assignment.node_role` → `azurerm_kubernetes_cluster_node_pool.green` — assigned to
+10. `azurerm_role_assignment.alb_controller_role` → `k8s-ingress-controller` — assigned to
+11. `k8s-namespace-default` → `k8s-deploy-sample-app` — contains
+12. `k8s-deploy-sample-app` → `k8s-svc-sample-app` — exposes
