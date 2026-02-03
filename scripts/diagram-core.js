@@ -9,6 +9,11 @@ class DiagramGenerator {
         this.edges = [];
         this.layout = {};
         
+        // Rendering constants
+        this.CONTAINER_ICON_SIZE = 32;
+        this.CONTAINER_PADDING = 20;
+        this.ICON_LABEL_SPACING = 10;
+        
         // Dragging state
         this.isDragging = false;
         this.isDraggingNode = false;
@@ -122,22 +127,21 @@ class DiagramGenerator {
             g.appendChild(handleRect);
         });
         
-        // Icon at top-left (if provided) - 32px for containers
-        let labelStartX = pos.x + 20;
+        // Icon at top-left (if provided)
+        let labelStartX = pos.x + this.CONTAINER_PADDING;
         if (node.icon) {
-            const iconSize = 32;
             const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-            image.setAttribute('x', pos.x + 20);
-            image.setAttribute('y', pos.y + 20);
-            image.setAttribute('width', iconSize);
-            image.setAttribute('height', iconSize);
+            image.setAttribute('x', pos.x + this.CONTAINER_PADDING);
+            image.setAttribute('y', pos.y + this.CONTAINER_PADDING);
+            image.setAttribute('width', this.CONTAINER_ICON_SIZE);
+            image.setAttribute('height', this.CONTAINER_ICON_SIZE);
             image.setAttribute('href', node.icon);
             image.setAttribute('class', 'container-icon');
             image.style.pointerEvents = 'none';
             g.appendChild(image);
             
             // Adjust label position to be next to the icon
-            labelStartX = pos.x + 20 + iconSize + 10;
+            labelStartX = pos.x + this.CONTAINER_PADDING + this.CONTAINER_ICON_SIZE + this.ICON_LABEL_SPACING;
         }
         
         // Label at top-left (wrapped) - positioned next to icon if present
