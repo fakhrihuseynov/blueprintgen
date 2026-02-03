@@ -76,6 +76,17 @@ class DiagramGenerator {
         g.setAttribute('data-container-id', node.id);
         g.style.cursor = 'grab';
         
+        // Add transparent interaction layer for better dragging (similar to nodes)
+        const interactionRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        interactionRect.setAttribute('x', pos.x);
+        interactionRect.setAttribute('y', pos.y);
+        interactionRect.setAttribute('width', pos.width);
+        interactionRect.setAttribute('height', pos.height);
+        interactionRect.setAttribute('fill', 'transparent');
+        interactionRect.setAttribute('class', 'container-interaction-layer');
+        interactionRect.style.pointerEvents = 'auto';
+        g.appendChild(interactionRect);
+        
         // Container rectangle with dotted border
         const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         rect.setAttribute('x', pos.x);
@@ -85,6 +96,7 @@ class DiagramGenerator {
         rect.setAttribute('rx', 16);
         rect.setAttribute('class', 'container-rect');
         rect.setAttribute('stroke-dasharray', '8,4');
+        rect.style.pointerEvents = 'none';
         g.appendChild(rect);
         
         // Add resize handles (invisible but interactive)
@@ -110,13 +122,32 @@ class DiagramGenerator {
             g.appendChild(handleRect);
         });
         
-        // Label at top-left (wrapped)
+        // Icon at top-left (if provided) - 32px for containers
+        let labelStartX = pos.x + 20;
+        if (node.icon) {
+            const iconSize = 32;
+            const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+            image.setAttribute('x', pos.x + 20);
+            image.setAttribute('y', pos.y + 20);
+            image.setAttribute('width', iconSize);
+            image.setAttribute('height', iconSize);
+            image.setAttribute('href', node.icon);
+            image.setAttribute('class', 'container-icon');
+            image.style.pointerEvents = 'none';
+            g.appendChild(image);
+            
+            // Adjust label position to be next to the icon
+            labelStartX = pos.x + 20 + iconSize + 10;
+        }
+        
+        // Label at top-left (wrapped) - positioned next to icon if present
         const labelLines = this.wrapText(node.label, 2);
         labelLines.forEach((line, index) => {
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', pos.x + 20);
+            text.setAttribute('x', labelStartX);
             text.setAttribute('y', pos.y + 28 + (index * 16));
             text.setAttribute('class', 'container-label');
+            text.style.pointerEvents = 'none';
             text.textContent = line;
             g.appendChild(text);
         });
@@ -127,9 +158,10 @@ class DiagramGenerator {
             const labelHeight = labelLines.length * 16;
             subtitleLines.forEach((line, index) => {
                 const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                subtitle.setAttribute('x', pos.x + 20);
+                subtitle.setAttribute('x', labelStartX);
                 subtitle.setAttribute('y', pos.y + 28 + labelHeight + (index * 14));
                 subtitle.setAttribute('class', 'container-subtitle');
+                subtitle.style.pointerEvents = 'none';
                 subtitle.textContent = line;
                 g.appendChild(subtitle);
             });
