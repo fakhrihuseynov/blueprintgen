@@ -46,7 +46,7 @@ class OllamaProxyHandler(http.server.SimpleHTTPRequestHandler):
                     headers={'Content-Type': 'application/json'}
                 )
                 
-                with urllib.request.urlopen(req, timeout=120) as response:
+                with urllib.request.urlopen(req, timeout=300) as response:
                     response_data = response.read()
                     
                     # Send success response
@@ -80,9 +80,39 @@ class OllamaProxyHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
     
     def do_GET(self):
-        """Handle GET requests - serve static files."""
-        # Serve static files normally
-        super().do_GET()
+        """Handle GET requests - serve static files or API endpoints."""
+        if self.path == '/api/icons':
+            try:
+                import os
+                icons = []
+                icons_dir = './assets/icons'
+                
+                # Walk through all icon directories
+                for root, dirs, files in os.walk(icons_dir):
+                    for file in files:
+                        if file.endswith('.svg'):
+                            # Get relative path from icons directory
+                            rel_path = os.path.join(root, file)
+                            icons.append({'path': rel_path.replace('\\', '/')})
+                
+                # Send JSON response
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                response = json.dumps({'success': True, 'icons': icons})
+                self.wfile.write(response.encode())
+                print(f"[API] Served {len(icons)} icons")
+                
+            except Exception as e:
+                print(f"[API] Error loading icons: {e}")
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                error_msg = json.dumps({'success': False, 'error': str(e)})
+                self.wfile.write(error_msg.encode())
+        else:
+            # Serve static files normally
+            super().do_GET()
 
 def main():
     """Start the server."""

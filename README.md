@@ -114,7 +114,7 @@ Your JSON file should follow this structure:
       "label": "Component Name",
       "subtitle": "module.name or description",
       "type": "network|compute|container|security|storage|iam",
-      "icon": "./assets/icons/icon-name.png"
+      "icon": "./assets/icons/AWS/Category/Service-Name.svg"
     }
   ],
   "edges": [
@@ -134,7 +134,7 @@ Your JSON file should follow this structure:
 - **label** (required): Display name (shown below the icon)
 - **subtitle** (optional): Additional description (shown below label)
 - **type** (optional): network, compute, container, security, storage, iam
-- **icon** (optional): Path to icon (./assets/icons/name.png)
+- **icon** (optional): Path to icon (./assets/icons/AWS/Category/Service.svg or ./assets/icons/Kubernetes/resource.svg)
 - **parentNode** (optional): ID of parent container for grouping related resources
 
 ### Edge Properties
@@ -162,7 +162,7 @@ Create **container nodes** to group related resources with dotted borders:
       "label": "VPC",
       "subtitle": "module.vpc",
       "type": "network",
-      "icon": "./assets/icons/vpc.png",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/VPC.svg",
       "parentNode": "vpc-group"
     },
     {
@@ -170,7 +170,7 @@ Create **container nodes** to group related resources with dotted borders:
       "label": "Internet Gateway",
       "subtitle": "module.vpc",
       "type": "network",
-      "icon": "./assets/icons/igw.png",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Internet-Gateway.svg",
       "parentNode": "vpc-group"
     }
   ]
@@ -185,15 +185,57 @@ Container nodes:
 
 ## Available Icons 🖼️
 
-The AI knows about all icons in `assets/icons/`:
-- AWS services (VPC, EKS, RDS, S3, etc.)
-- Kubernetes resources (pods, services, deployments)
-- Common tools (Prometheus, Grafana, ArgoCD)
-- Custom infrastructure components
+Icons are organized by provider and service category:
 
-Place your icon files in `assets/icons/`. Supported formats:
-- PNG (recommended for cloud service logos)
-- SVG (recommended for custom icons)
+### AWS Icons
+Located in `assets/icons/AWS/[Category]/[Service].svg`:
+
+**Service Categories:**
+- **Compute/** - EC2, Lambda, Fargate, Batch, Lightsail, etc.
+- **Containers/** - Elastic-Kubernetes-Service, Elastic-Container-Service, Elastic-Container-Registry, App-Runner, etc.
+- **Database/** - RDS, DynamoDB, Aurora, ElastiCache, DocumentDB, Neptune, etc.
+- **Networking-Content-Delivery/** - VPC, CloudFront, Route-53, Elastic-Load-Balancing, API-Gateway, Direct-Connect, etc.
+- **Storage/** - Simple-Storage-Service, Elastic-Block-Store, Elastic-File-System, FSx, Storage-Gateway, etc.
+- **Security-Identity-Compliance/** - Identity-and-Access-Management, Key-Management-Service, Secrets-Manager, Certificate-Manager, etc.
+- **Analytics/** - Kinesis, Athena, Glue, EMR, QuickSight, Data-Pipeline, etc.
+- **Machine-Learning/** - SageMaker, Bedrock, Comprehend, Rekognition, etc.
+- **Management-Governance/** - CloudWatch, CloudFormation, Systems-Manager, Config, Organizations, etc.
+- **Developer-Tools/** - CodePipeline, CodeBuild, CodeDeploy, CodeCommit, etc.
+- And 15+ more categories (App-Integration, Migration, IoT, Media-Services, etc.)
+
+**Icon Path Format:** `./assets/icons/AWS/[Category]/[Service-Name].svg`
+
+**Examples:**
+- EKS: `./assets/icons/AWS/Containers/Elastic-Kubernetes-Service.svg`
+- EC2: `./assets/icons/AWS/Compute/EC2.svg`
+- RDS: `./assets/icons/AWS/Database/RDS.svg`
+- VPC: `./assets/icons/AWS/Networking-Content-Delivery/VPC.svg`
+- S3: `./assets/icons/AWS/Storage/Simple-Storage-Service.svg`
+- Lambda: `./assets/icons/AWS/Compute/Lambda.svg`
+- IAM: `./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg`
+
+### Kubernetes Icons
+Located in `assets/icons/Kubernetes/[resource].svg` (flat structure):
+- **Resources**: deploy, svc, pod, ing, cm, secret, pv, pvc, hpa, sts, ds, job, cron, sa, role, rb, etc.
+
+**Icon Path Format:** `./assets/icons/Kubernetes/[resource].svg`
+
+### Monitoring Icons  
+Located in `assets/icons/Monitoring/[tool].svg` (flat structure):
+- **Tools**: prometheus, grafana, fluentbit
+
+**Icon Path Format:** `./assets/icons/Monitoring/[tool].svg`
+
+### General Icons
+Located in `assets/icons/General/[name].svg` (flat structure):
+- **Generic Resources**: 46 general-purpose resource icons with `Res_*_48_Light.svg` naming pattern
+
+**Icon Path Format:** `./assets/icons/General/[name].svg`
+
+**Important Notes:**
+- All icons are in **SVG format** (not PNG)
+- AWS service names use **full names with hyphens** (e.g., `Elastic-Kubernetes-Service.svg` not `eks.svg`)
+- The AI generator automatically selects the correct category and icon based on your description
 
 ## AI Integration Details 🤖
 

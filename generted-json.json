@@ -1,0 +1,128 @@
+{
+  "nodes": [
+    {
+      "id": "vpc",
+      "label": "Production VPC",
+      "type": "container",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg"
+    },
+    {
+      "id": "subnet1",
+      "label": "Public Subnet 1",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "vpc"
+    },
+    {
+      "id": "subnet2",
+      "label": "Private Subnet 2",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "vpc"
+    },
+    {
+      "id": "igw",
+      "label": "Internet Gateway",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "vpc"
+    },
+    {
+      "id": "nat-gateway",
+      "label": "NAT Gateway",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "vpc"
+    },
+    {
+      "id": "ec2-instance1",
+      "label": "Web Server 1",
+      "type": "compute",
+      "icon": "./assets/icons/AWS/Compute/EC2.svg",
+      "parentNode": "subnet1"
+    },
+    {
+      "id": "ec2-instance2",
+      "label": "Database Server",
+      "type": "storage",
+      "icon": "./assets/icons/AWS/Storage/RDS.svg",
+      "parentNode": "subnet2"
+    },
+    {
+      "id": "elb",
+      "label": "Application Load Balancer",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Elastic-Load-Balancing.svg",
+      "parentNode": "vpc"
+    },
+    {
+      "id": "rds-db",
+      "label": "MySQL Database",
+      "type": "storage",
+      "icon": "./assets/icons/AWS/Storage/RDS.svg",
+      "parentNode": "subnet2"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "vpc",
+      "target": "subnet1",
+      "label": "Contains"
+    },
+    {
+      "id": "e2",
+      "source": "vpc",
+      "target": "subnet2",
+      "label": "Contains"
+    },
+    {
+      "id": "e3",
+      "source": "vpc",
+      "target": "igw",
+      "label": "Contains"
+    },
+    {
+      "id": "e4",
+      "source": "vpc",
+      "target": "nat-gateway",
+      "label": "Contains"
+    },
+    {
+      "id": "e5",
+      "source": "subnet1",
+      "target": "ec2-instance1",
+      "label": "Runs"
+    },
+    {
+      "id": "e6",
+      "source": "subnet2",
+      "target": "ec2-instance2",
+      "label": "Runs"
+    },
+    {
+      "id": "e7",
+      "source": "vpc",
+      "target": "elb",
+      "label": "Contains"
+    },
+    {
+      "id": "e8",
+      "source": "subnet1",
+      "target": "elb",
+      "label": "Attached to"
+    },
+    {
+      "id": "e9",
+      "source": "elb",
+      "target": "ec2-instance1",
+      "label": "Routes traffic to"
+    },
+    {
+      "id": "e10",
+      "source": "subnet2",
+      "target": "rds-db",
+      "label": "Runs"
+    }
+  ]
+}

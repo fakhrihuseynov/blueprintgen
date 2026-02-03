@@ -1,0 +1,228 @@
+{
+  "nodes": [
+    {
+      "id": "network-layer",
+      "label": "Network Layer",
+      "type": "container",
+      "icon": "./assets/icons/General/Folder_48_Light.svg"
+    },
+    {
+      "id": "compute-tier",
+      "label": "Compute Tier",
+      "type": "container",
+      "icon": "./assets/icons/General/Folder_48_Light.svg"
+    },
+    {
+      "id": "identity-access",
+      "label": "Identity & Access",
+      "type": "container",
+      "icon": "./assets/icons/General/Folder_48_Light.svg"
+    },
+    {
+      "id": "kubernetes-workloads",
+      "label": "Kubernetes Workloads",
+      "type": "container",
+      "icon": "./assets/icons/Kubernetes/ns.svg"
+    },
+    {
+      "id": "aws_vpc.this",
+      "label": "Main VPC",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_internet_gateway.igw",
+      "label": "Internet Gateway",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_route_table.public",
+      "label": "Public Route Table",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_subnet.public[0]",
+      "label": "Public Subnet 0",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/VPC-Subnet.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_subnet.public[1]",
+      "label": "Public Subnet 1",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/VPC-Subnet.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_route_table_association.public[0]",
+      "label": "Route Table Association (subnet 0)",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_route_table_association.public[1]",
+      "label": "Route Table Association (subnet 1)",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Networking-Content-Delivery/Virtual-Private-Cloud.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_security_group.workers",
+      "label": "Workers Security Group",
+      "type": "network",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Network-Firewall.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aws_eks_cluster.this",
+      "label": "EKS Control Plane",
+      "type": "compute",
+      "icon": "./assets/icons/AWS/Containers/EKS-Cloud.svg",
+      "parentNode": "compute-tier"
+    },
+    {
+      "id": "aws_eks_node_group.ng",
+      "label": "EKS Node Group",
+      "type": "compute",
+      "icon": "./assets/icons/AWS/Compute/EC2.svg",
+      "parentNode": "compute-tier"
+    },
+    {
+      "id": "aws_iam_role.eks_cluster",
+      "label": "EKS Cluster Role",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "aws_iam_role.node",
+      "label": "Node Instance Role",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "aws_iam_role_policy_attachment.cluster",
+      "label": "Cluster Policy Attachment",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "aws_iam_role_policy_attachment.node_worker",
+      "label": "Node Worker Policy Attachment",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "aws_iam_role_policy_attachment.node_ec2",
+      "label": "Node EC2 Policy Attachment",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "aws_iam_role_policy_attachment.node_cni",
+      "label": "Node CNI Policy Attachment",
+      "type": "identity-access",
+      "icon": "./assets/icons/AWS/Security-Identity-Compliance/Identity-and-Access-Management.svg",
+      "parentNode": "identity-access"
+    },
+    {
+      "id": "nginx-deployment",
+      "label": "Nginx Deployment",
+      "type": "kubernetes-workloads",
+      "icon": "./assets/icons/Kubernetes/deploy.svg",
+      "parentNode": "kubernetes-workloads"
+    },
+    {
+      "id": "nginx-service",
+      "label": "Nginx Service",
+      "type": "kubernetes-workloads",
+      "icon": "./assets/icons/Kubernetes/svc.svg",
+      "parentNode": "kubernetes-workloads"
+    },
+    {
+      "id": "ingress-service",
+      "label": "Ingress Service",
+      "type": "kubernetes-workloads",
+      "icon": "./assets/icons/Kubernetes/svc.svg",
+      "parentNode": "kubernetes-workloads"
+    }
+  ],
+  "edges": [
+    {
+      "source": "aws_vpc.this",
+      "target": "aws_internet_gateway.igw",
+      "label": "attached"
+    },
+    {
+      "source": "aws_vpc.this",
+      "target": "aws_route_table.public",
+      "label": "contains"
+    },
+    {
+      "source": "aws_vpc.this",
+      "target": "aws_subnet.public[0]",
+      "label": "contains"
+    },
+    {
+      "source": "aws_vpc.this",
+      "target": "aws_subnet.public[1]",
+      "label": "contains"
+    },
+    {
+      "source": "aws_route_table.public",
+      "target": "aws_route_table_association.public[0]",
+      "label": "associated with"
+    },
+    {
+      "source": "aws_route_table.public",
+      "target": "aws_route_table_association.public[1]",
+      "label": "associated with"
+    },
+    {
+      "source": "aws_subnet.public[0]",
+      "target": "aws_route_table_association.public[0]",
+      "label": "association target"
+    },
+    {
+      "source": "aws_subnet.public[1]",
+      "target": "aws_route_table_association.public[1]",
+      "label": "association target"
+    },
+    {
+      "source": "aws_security_group.workers",
+      "target": "aws_eks_node_group.ng",
+      "label": "used by"
+    },
+    {
+      "source": "aws_iam_role.eks_cluster",
+      "target": "aws_eks_cluster.this",
+      "label": "assumed by"
+    },
+    {
+      "source": "aws_iam_role.node",
+      "target": "aws_eks_node_group.ng",
+      "label": "assumed by"
+    },
+    {
+      "source": "aws_eks_cluster.this",
+      "target": "nginx-deployment",
+      "label": "hosts Kubernetes workloads"
+    },
+    {
+      "source": "aws_eks_node_group.ng",
+      "target": "nginx-deployment",
+      "label": "runs pods for the deployment"
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "nodes": [
+    {
+      "id": "network-layer",
+      "label": "Network Layer",
+      "type": "container",
+      "icon": "./assets/icons/Azure/networking/Folder_48_Light.svg"
+    },
+    {
+      "id": "compute-tier",
+      "label": "Compute Tier",
+      "type": "container",
+      "icon": "./assets/icons/Azure/compute/Folder_48_Light.svg"
+    },
+    {
+      "id": "data-layer",
+      "label": "Data Layer",
+      "type": "container",
+      "icon": "./assets/icons/Azure/storage/Folder_48_Light.svg"
+    },
+    {
+      "id": "production-environment",
+      "label": "Production Environment",
+      "type": "container",
+      "icon": "./assets/icons/Azure/containers/Folder_48_Light.svg"
+    },
+    {
+      "id": "virtual-network-aks_vnet",
+      "label": "Virtual Network (AKS VNet)",
+      "type": "network",
+      "icon": "./assets/icons/Azure/networking/Virtual-Networks.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "subnet-public",
+      "label": "Public Subnet",
+      "type": "network",
+      "icon": "./assets/icons/Azure/networking/Subnet.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "subnet-private",
+      "label": "Private Subnet",
+      "type": "network",
+      "icon": "./assets/icons/Azure/networking/Subnet.svg",
+      "parentNode": "network-layer"
+    },
+    {
+      "id": "aks-cluster-aks",
+      "label": "AKS Cluster (AKS)",
+      "type": "compute",
+      "icon": "./assets/icons/Azure/containers/Kubernetes-Services.svg",
+      "parentNode": "compute-tier"
+    },
+    {
+      "id": "kubernetes-deployment",
+      "label": "Kubernetes Deployment",
+      "type": "container",
+      "icon": "./assets/icons/Azure/containers/Folder_48_Light.svg",
+      "parentNode": "production-environment"
+    },
+    {
+      "id": "kubernetes-service",
+      "label": "Kubernetes Service",
+      "type": "container",
+      "icon": "./assets/icons/Azure/containers/Folder_48_Light.svg",
+      "parentNode": "production-environment"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "network-layer",
+      "target": "virtual-network-aks_vnet",
+      "label": "depends on"
+    },
+    {
+      "id": "e2",
+      "source": "virtual-network-aks_vnet",
+      "target": "subnet-public",
+      "label": "provides address space"
+    },
+    {
+      "id": "e3",
+      "source": "network-layer",
+      "target": "subnet-public",
+      "label": "depends on"
+    },
+    {
+      "id": "e4",
+      "source": "virtual-network-aks_vnet",
+      "target": "subnet-private",
+      "label": "provides address space"
+    },
+    {
+      "id": "e5",
+      "source": "network-layer",
+      "target": "subnet-private",
+      "label": "depends on"
+    },
+    {
+      "id": "e6",
+      "source": "virtual-network-aks_vnet",
+      "target": "aks-cluster-aks",
+      "label": "network isolation"
+    },
+    {
+      "id": "e7",
+      "source": "subnet-public",
+      "target": "aks-cluster-aks",
+      "label": "provides network addressing"
+    },
+    {
+      "id": "e8",
+      "source": "subnet-private",
+      "target": "aks-cluster-aks",
+      "label": "provides network addressing"
+    },
+    {
+      "id": "e9",
+      "source": "aks-cluster-aks",
+      "target": "kubernetes-deployment",
+      "label": "hosts workload"
+    },
+    {
+      "id": "e10",
+      "source": "aks-cluster-aks",
+      "target": "kubernetes-service",
+      "label": "hosts workload"
+    }
+  ]
+}

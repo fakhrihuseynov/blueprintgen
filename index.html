@@ -18,7 +18,7 @@
                     <circle cx="22" cy="10" r="2" fill="white"/>
                     <circle cx="22" cy="22" r="2" fill="white"/>
                 </svg>
-                <h1>Blueprint Generator</h1>
+                <h1 id="app-title" style="cursor: pointer;">Blueprint Generator</h1>
             </div>
             <div class="header-actions">
                 <label for="file-upload" class="btn btn-primary">
@@ -55,6 +55,15 @@
                         <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
                     Export PNG
+                </button>
+                
+                <button id="export-svg" class="btn btn-secondary" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        <polyline points="2 17 12 22 22 17"/>
+                        <polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    Export SVG
                 </button>
             </div>
         </header>
@@ -102,100 +111,134 @@
             <div id="ai-generator-screen" class="ai-generator-screen" style="display: none;">
                 <div class="ai-generator-content">
                     <div class="ai-header">
+                        <div class="ai-title-section">
+                            <h2>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5"/>
+                                    <path d="M2 12l10 5 10-5"/>
+                                </svg>
+                                AI Blueprint Generator
+                            </h2>
+                            <p>Upload markdown → AI generates JSON → Visualize your architecture</p>
+                        </div>
                         <button id="close-ai-generator" class="close-btn-large">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="18" y1="6" x2="6" y2="18"/>
                                 <line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
                         </button>
-                        <h2>
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                                <path d="M2 17l10 5 10-5"/>
-                                <path d="M2 12l10 5 10-5"/>
-                            </svg>
-                            AI Blueprint Generator
-                        </h2>
-                        <p>Upload a markdown file describing your architecture, and AI will generate the JSON</p>
                     </div>
 
                     <div class="ai-body">
-                        <div class="ai-left-panel">
-                            <div class="upload-section">
-                                <h3>1. Upload Markdown File</h3>
-                                <label for="md-file-upload" class="upload-box">
-                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <!-- Step 1: Upload -->
+                        <div class="ai-step">
+                            <div class="step-header">
+                                <div class="step-number">1</div>
+                                <div class="step-title">
+                                    <h3>Upload Markdown</h3>
+                                    <small>Describe your architecture in plain text</small>
+                                </div>
+                            </div>
+                            <div class="step-content">
+                                <label for="md-file-upload" class="upload-box-horizontal">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                         <polyline points="17 8 12 3 7 8"/>
                                         <line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
-                                    <span>Click to upload .md file</span>
-                                    <small>Describe your resources and their connections</small>
+                                    <div class="upload-text">
+                                        <span>Click or drag .md files here</span>
+                                        <small>Multiple files supported • Markdown format</small>
+                                    </div>
                                 </label>
-                                <input type="file" id="md-file-upload" accept=".md,.markdown" style="display: none;">
-                            </div>
-
-                            <div id="md-preview" class="md-preview" style="display: none;">
-                                <div class="section-header">
-                                    <h4>Markdown Content</h4>
-                                    <button id="clear-md" class="btn-icon">Clear</button>
+                                <input type="file" id="md-file-upload" accept=".md,.markdown" multiple style="display: none;">
+                                
+                                <div id="md-preview" class="md-preview-compact" style="display: none;">
+                                    <div class="preview-actions">
+                                        <span id="file-count-badge" class="badge-success">0 files loaded</span>
+                                        <button id="clear-md" class="btn-icon" title="Clear all files">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                                <line x1="6" y1="6" x2="18" y2="18"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <pre id="md-content"></pre>
                                 </div>
-                                <pre id="md-content"></pre>
-                            </div>
-
-                            <div class="generate-section">
-                                <button id="generate-json-btn" class="btn btn-primary btn-large" disabled>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-15"/>
-                                        <polyline points="7 10 12 15 17 10"/>
-                                    </svg>
-                                    Generate JSON with AI
-                                </button>
-                                <small id="model-info">Using: Ollama (qwen2.5-coder:7)</small>
                             </div>
                         </div>
 
-                        <div class="ai-right-panel">
-                            <div id="json-result" class="json-result" style="display: none;">
-                                <div class="section-header">
-                                    <h4>Generated JSON</h4>
-                                    <div class="result-actions">
-                                        <button id="copy-json-btn" class="btn-icon" title="Copy to clipboard">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <!-- Step 2: Generate -->
+                        <div class="ai-step">
+                            <div class="step-header">
+                                <div class="step-number">2</div>
+                                <div class="step-title">
+                                    <h3>Generate JSON</h3>
+                                    <small id="model-info">Powered by Ollama (qwen2.5-coder:7b)</small>
+                                </div>
+                            </div>
+                            <div class="step-content">
+                                <button id="generate-json-btn" class="btn btn-primary btn-xl" disabled>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                    Generate Architecture JSON
+                                </button>
+
+                                <div id="loading-indicator" class="loading-indicator-inline" style="display: none;">
+                                    <div class="spinner-small"></div>
+                                    <span>AI is analyzing your architecture...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Result -->
+                        <div class="ai-step">
+                            <div class="step-header">
+                                <div class="step-number">3</div>
+                                <div class="step-title">
+                                    <h3>Review & Visualize</h3>
+                                    <small>Your generated architecture JSON</small>
+                                </div>
+                            </div>
+                            <div class="step-content">
+                                <div id="json-result" class="json-result-box" style="display: none;">
+                                    <div class="json-actions-bar">
+                                        <button id="copy-json-btn" class="btn btn-secondary" title="Copy to clipboard">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                                                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                                             </svg>
+                                            Copy
                                         </button>
-                                        <button id="download-json-btn" class="btn-icon" title="Download JSON">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <button id="download-json-btn" class="btn btn-secondary" title="Download JSON file">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                                                 <polyline points="7 10 12 15 17 10"/>
                                                 <line x1="12" y1="15" x2="12" y2="3"/>
                                             </svg>
+                                            Download
                                         </button>
                                         <button id="visualize-json-btn" class="btn btn-primary">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                                             </svg>
-                                            Visualize
+                                            Visualize Diagram
                                         </button>
                                     </div>
+                                    <pre id="json-output"></pre>
                                 </div>
-                                <pre id="json-output"></pre>
-                            </div>
 
-                            <div id="loading-indicator" class="loading-indicator" style="display: none;">
-                                <div class="spinner"></div>
-                                <p>AI is generating your architecture JSON...</p>
-                                <small>This may take a few seconds</small>
-                            </div>
-
-                            <div id="available-icons" class="available-icons">
-                                <div class="section-header">
-                                    <h4>Available Icons</h4>
-                                    <span id="icon-count" class="badge">0</span>
+                                <div id="available-icons" class="available-icons-compact">
+                                    <details open>
+                                        <summary>
+                                            <h4>Available Icons</h4>
+                                            <span id="icon-count" class="badge">0</span>
+                                        </summary>
+                                        <div id="icon-grid" class="icon-grid-compact"></div>
+                                    </details>
                                 </div>
-                                <div id="icon-grid" class="icon-grid"></div>
                             </div>
                         </div>
                     </div>
@@ -248,7 +291,7 @@
                 <div id="info-panel" class="info-panel">
                     <div class="info-header">
                         <h3>Diagram Info</h3>
-                        <button id="close-info" class="close-btn">×</button>
+                        <button id="close-info" class="close-btn" title="Toggle panel">×</button>
                     </div>
                     <div class="info-content">
                         <div class="info-item">
@@ -286,8 +329,42 @@
             </svg>
             <span id="success-message"></span>
         </div>
+        
+        <!-- Icon Picker Modal -->
+        <div id="icon-picker-modal" class="modal" style="display: none;">
+            <div class="modal-content icon-picker-content">
+                <div class="modal-header">
+                    <h3>Select Icon</h3>
+                    <button class="close-btn" onclick="closeIconPicker()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="icon-picker-search">
+                        <input type="text" id="icon-search" placeholder="Search icons..." />
+                        <select id="icon-category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="AWS">AWS</option>
+                            <option value="Azure">Azure</option>
+                            <option value="GCP">GCP</option>
+                            <option value="Kubernetes">Kubernetes</option>
+                            <option value="Monitoring">Monitoring</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    <div id="icon-picker-grid" class="icon-picker-grid"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Application -->
-    <script src="scripts/app.js"></script>
+<!-- Application Modules -->
+    <script src="scripts/utils.js"></script>
+    <script src="scripts/layout-engine.js"></script>
+    <script src="scripts/event-handlers.js"></script>
+    <script src="scripts/diagram-core.js"></script>
+    <script src="scripts/icon-picker.js"></script>
+    <script src="scripts/main.js"></script>
+    
+    <!-- AI Generator Modules (load in dependency order) -->
+    <script src="scripts/icon-validator.js"></script>
+    <script src="scripts/ai-prompt-builder.js"></script>
     <script src="scripts/ai-generator.js"></script>
