@@ -2,8 +2,6 @@
 
 // Global diagram instance
 let diagram;
-// Global Visio exporter instance (deprecated - using Draw.io export instead)
-// let visioExporter;
 
 
 // Load diagram from JSON data
@@ -16,7 +14,6 @@ function loadDiagram(jsonData) {
         const diagramContainer = document.getElementById('diagram-container');
         const downloadBtn = document.getElementById('download-diagram');
         const exportSvgBtn = document.getElementById('export-svg');
-        const exportDrawioBtn = document.getElementById('export-drawio');
         
         if (welcomeScreen) welcomeScreen.style.display = 'none';
         if (diagramContainer) {
@@ -277,27 +274,17 @@ async function exportToSVG() {
             throw new Error('SVG element not found');
         }
         
-        // Get all groups (nodes and edges)
-        const allNodes = svgElement.querySelectorAll('g[data-node-id]');
-        const allEdges = svgElement.querySelectorAll('g[data-edge-id]');
-        
-        if (allNodes.length === 0) {
-            throw new Error('No diagram content found');
+        // Get the main group that contains everything
+        const diagramGroup = document.getElementById('diagram-group');
+        if (!diagramGroup) {
+            throw new Error('Diagram group not found');
         }
         
-        // Calculate bounds of all node elements
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        allNodes.forEach(node => {
-            const bbox = node.getBBox();
-            minX = Math.min(minX, bbox.x);
-            minY = Math.min(minY, bbox.y);
-            maxX = Math.max(maxX, bbox.x + bbox.width);
-            maxY = Math.max(maxY, bbox.y + bbox.height);
-        });
-        
+        // Calculate bounds
+        const bbox = diagramGroup.getBBox();
         const padding = 40;
-        const width = maxX - minX + padding * 2;
-        const height = maxY - minY + padding * 2;
+        const width = bbox.width + padding * 2;
+        const height = bbox.height + padding * 2;
         
         // Create a new clean SVG
         const newSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -305,58 +292,77 @@ async function exportToSVG() {
         newSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
         newSvg.setAttribute('width', width);
         newSvg.setAttribute('height', height);
-        newSvg.setAttribute('viewBox', `${minX - padding} ${minY - padding} ${width} ${height}`);
-        newSvg.style.background = 'white';
+        newSvg.setAttribute('viewBox', `${bbox.x - padding} ${bbox.y - padding} ${width} ${height}`);
         
-        // Add defs for arrow markers
+        // Add white background
+        const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bgRect.setAttribute('x', bbox.x - padding);
+        bgRect.setAttribute('y', bbox.y - padding);
+        bgRect.setAttribute('width', width);
+        bgRect.setAttribute('height', height);
+        bgRect.setAttribute('fill', 'white');
+        newSvg.appendChild(bgRect);
+        
+        // Add defs and styles
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        defs.innerHTML = `
-            <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <polygon points="0 0, 10 3, 0 6" fill="#4F46E5"/>
-            </marker>`;
+        const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+        style.textContent = `
+            .node-rect { fill: #ffffff; stroke: #e5e7eb; stroke-width: 2; }
+            .node-label { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; fill: #1f2937; }
+            .node-subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 400; fill: #6b7280; }
+            .edge-path { fill: none; stroke: #6366f1; stroke-width: 2; }
+            .edge-label { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 500; fill: #6b7280; }
+            .edge-label-bg { fill: white; opacity: 0.95; }
+            .container-rect { fill: rgba(99, 102, 241, 0.04); stroke: rgba(79, 70, 229, 0.5); stroke-width: 2; stroke-dasharray: 8, 4; }
+            .container-label { font-family: system-ui, -apple-system, sans-serif; font-size: 16px; font-weight: 700; fill: #1f2937; }
+            .container-subtitle { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; font-weight: 500; fill: #6b7280; }
+        `;
+        defs.appendChild(style);
+        
+        // Add arrow marker
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+        marker.setAttribute('id', 'arrowhead');
+        marker.setAttribute('markerWidth', '10');
+        marker.setAttribute('markerHeight', '10');
+        marker.setAttribute('refX', '9');
+        marker.setAttribute('refY', '3');
+        marker.setAttribute('orient', 'auto');
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        arrow.setAttribute('points', '0 0, 10 3, 0 6');
+        arrow.setAttribute('fill', '#6366f1');
+        marker.appendChild(arrow);
+        defs.appendChild(marker);
+        
         newSvg.appendChild(defs);
         
-        // First, add all edges (so they appear behind nodes)
-        for (const edge of allEdges) {
-            const edgeClone = edge.cloneNode(true);
-            newSvg.appendChild(edgeClone);
-        }
+        // Clone the entire diagram group
+        const groupClone = diagramGroup.cloneNode(true);
         
-        // Then, add all nodes with embedded images
-        for (const node of allNodes) {
-            const nodeClone = node.cloneNode(true);
-            
-            // Ensure borders are visible
-            const rects = nodeClone.querySelectorAll('rect');
-            rects.forEach(rect => {
-                if (!rect.getAttribute('stroke') || rect.getAttribute('stroke') === 'none') {
-                    rect.setAttribute('stroke', '#9CA3AF');
-                    rect.setAttribute('stroke-width', '2');
-                }
-            });
-            
-            // Embed images as data URIs
-            const images = nodeClone.querySelectorAll('image');
-            for (const img of images) {
-                const href = img.getAttribute('href') || img.getAttribute('xlink:href');
-                if (href && !href.startsWith('data:')) {
-                    try {
-                        const response = await fetch(href);
-                        const blob = await response.blob();
-                        const dataUrl = await new Promise((resolve) => {
-                            const reader = new FileReader();
-                            reader.onloadend = () => resolve(reader.result);
-                            reader.readAsDataURL(blob);
-                        });
-                        img.setAttribute('href', dataUrl);
-                    } catch (error) {
-                        console.warn('Failed to embed image:', href);
-                    }
+        // Embed all images as data URIs
+        const images = groupClone.querySelectorAll('image');
+        for (const img of images) {
+            const href = img.getAttribute('href') || img.getAttribute('xlink:href');
+            if (href && !href.startsWith('data:')) {
+                try {
+                    const response = await fetch(href);
+                    const blob = await response.blob();
+                    const dataUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                    img.setAttribute('href', dataUrl);
+                    img.removeAttribute('xlink:href');
+                } catch (error) {
+                    console.warn('Failed to embed image:', href);
                 }
             }
-            
-            newSvg.appendChild(nodeClone);
         }
+        
+        // Remove transform from the group for export
+        groupClone.removeAttribute('transform');
+        
+        newSvg.appendChild(groupClone);
         
         const svgData = new XMLSerializer().serializeToString(newSvg);
         const styledSvg = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${svgData}`;
@@ -369,21 +375,11 @@ async function exportToSVG() {
         link.click();
         URL.revokeObjectURL(url);
         
-        showToast('success', 'Diagram exported as SVG!');
+        showToast('success', 'SVG exported!');
     } catch (error) {
         showToast('error', 'Failed to export SVG: ' + error.message);
         console.error('SVG export error:', error);
     }
-}
-
-function escapeXml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;');
 }
 
 // Go to home/welcome screen
@@ -408,10 +404,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize diagram
     diagram = new DiagramGenerator();
-    
-    // Note: Visio exporter deprecated in favor of Draw.io export
-    // Initialize Visio exporter
-    // visioExporter = new VisioExporter();
     
     // Initialize icon picker
     window.iconPicker = new IconPicker(diagram);
