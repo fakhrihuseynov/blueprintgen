@@ -2,6 +2,7 @@
 
 // Global diagram instance
 let diagram;
+let drawioExporter;
 
 
 // Load diagram from JSON data
@@ -14,6 +15,7 @@ function loadDiagram(jsonData) {
         const diagramContainer = document.getElementById('diagram-container');
         const downloadBtn = document.getElementById('download-diagram');
         const exportSvgBtn = document.getElementById('export-svg');
+        const exportDrawioBtn = document.getElementById('export-drawio');
         
         if (welcomeScreen) welcomeScreen.style.display = 'none';
         if (diagramContainer) {
@@ -22,6 +24,7 @@ function loadDiagram(jsonData) {
         }
         if (downloadBtn) downloadBtn.style.display = 'flex';
         if (exportSvgBtn) exportSvgBtn.style.display = 'flex';
+        if (exportDrawioBtn) exportDrawioBtn.style.display = 'flex';
         
         // Wait for DOM update
         requestAnimationFrame(() => {
@@ -382,6 +385,30 @@ async function exportToSVG() {
     }
 }
 
+// Export diagram to Draw.io format
+async function exportToDrawio() {
+    if (!diagram || !diagram.nodes || !diagram.edges) {
+        showToast('error', 'No diagram to export');
+        return;
+    }
+    
+    try {
+        showToast('info', 'Generating Draw.io file...');
+        
+        if (!drawioExporter) {
+            drawioExporter = new DrawioExporter();
+        }
+        
+        // Export and download
+        drawioExporter.download(diagram.nodes, diagram.edges, 'architecture-diagram.drawio');
+        
+        showToast('success', 'Draw.io file exported! Open it in draw.io for cloud icons.');
+    } catch (error) {
+        showToast('error', 'Failed to export Draw.io: ' + error.message);
+        console.error('Draw.io export error:', error);
+    }
+}
+
 // Go to home/welcome screen
 function goToHome() {
     const welcomeScreen = document.getElementById('welcome-screen');
@@ -389,21 +416,26 @@ function goToHome() {
     const aiGeneratorScreen = document.getElementById('ai-generator-screen');
     const downloadBtn = document.getElementById('download-diagram');
     const exportSvgBtn = document.getElementById('export-svg');
+    const exportDrawioBtn = document.getElementById('export-drawio');
     
     if (welcomeScreen) welcomeScreen.style.display = 'flex';
     if (diagramContainer) diagramContainer.style.display = 'none';
     if (aiGeneratorScreen) aiGeneratorScreen.style.display = 'none';
     if (downloadBtn) downloadBtn.style.display = 'none';
     if (exportSvgBtn) exportSvgBtn.style.display = 'none';
+    if (exportDrawioBtn) exportDrawioBtn.style.display = 'none';
 }
 
 
-// Initialize app when DOM is ready
+    // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing app...');
     
     // Initialize diagram
     diagram = new DiagramGenerator();
+    
+    // Initialize draw.io exporter
+    drawioExporter = new DrawioExporter();
     
     // Initialize icon picker
     window.iconPicker = new IconPicker(diagram);
@@ -444,6 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeInfoBtn = document.getElementById('close-info');
     const downloadBtn = document.getElementById('download-diagram');
     const exportSvgBtn = document.getElementById('export-svg');
+    const exportDrawioBtn = document.getElementById('export-drawio');
     const appTitle = document.getElementById('app-title');
     
     if (zoomInBtn) zoomInBtn.addEventListener('click', () => diagram && diagram.zoomIn());
@@ -459,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (downloadBtn) downloadBtn.addEventListener('click', downloadDiagram);
     if (exportSvgBtn) exportSvgBtn.addEventListener('click', exportToSVG);
+    if (exportDrawioBtn) exportDrawioBtn.addEventListener('click', exportToDrawio);
     if (appTitle) appTitle.addEventListener('click', goToHome);
 
     

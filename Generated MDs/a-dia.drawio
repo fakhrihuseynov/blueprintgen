@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-02-03T10:07:32.789Z" agent="Blueprint Generator" version="21.0.0" etag="1770113252789" type="device">
+  <diagram name="Architecture" id="architecture-diagram">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="3" value="Network Layer" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=60;fillColor=#E3F2FD;strokeColor=#4F46E5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontColor=#1E3A8A;swimlaneFillColor=#F8FAFC" parent="1" vertex="1">
+          <mxGeometry x="50" y="50" width="610" height="670" as="geometry"/>
+        </mxCell>
+        <mxCell id="4" value="Compute Tier" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=60;fillColor=#E3F2FD;strokeColor=#4F46E5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontColor=#1E3A8A;swimlaneFillColor=#F8FAFC" parent="1" vertex="1">
+          <mxGeometry x="860" y="50" width="430" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="5" value="Identity &amp; Access" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=60;fillColor=#E3F2FD;strokeColor=#4F46E5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontColor=#1E3A8A;swimlaneFillColor=#F8FAFC" parent="1" vertex="1">
+          <mxGeometry x="50" y="560" width="610" height="490" as="geometry"/>
+        </mxCell>
+        <mxCell id="6" value="Kubernetes Workloads" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=60;fillColor=#E3F2FD;strokeColor=#4F46E5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontColor=#1E3A8A;swimlaneFillColor=#F8FAFC" parent="1" vertex="1">
+          <mxGeometry x="860" y="560" width="430" height="490" as="geometry"/>
+        </mxCell>
+        <mxCell id="7" value="Main VPC" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="30" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="8" value="Internet Gateway" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="180" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="9" value="Public Route Table" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="330" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="10" value="Public Subnet 0" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="30" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="11" value="Public Subnet 1" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="180" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="12" value="Route Table Association (subnet 0)" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="330" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="13" value="Route Table Association (subnet 1)" style="shape=mxgraph.aws4.vpc;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#8C4FFF;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="30" y="450" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="14" value="Workers Security Group" style="shape=rectangle;fillColor=#E0E0E0;strokeColor=#757575;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12" parent="3" vertex="1">
+          <mxGeometry x="180" y="450" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="15" value="EKS Control Plane" style="shape=rectangle;fillColor=#E0E0E0;strokeColor=#757575;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;fontFamily=Helvetica;fontSize=12" parent="4" vertex="1">
+          <mxGeometry x="30" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="16" value="EKS Node Group" style="shape=mxgraph.aws4.ec2;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#ED7100;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="4" vertex="1">
+          <mxGeometry x="180" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="17" value="EKS Cluster Role" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="30" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="18" value="Node Instance Role" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="180" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="19" value="Cluster Policy Attachment" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="330" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="20" value="Node Worker Policy Attachment" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="30" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="21" value="Node EC2 Policy Attachment" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="180" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="22" value="Node CNI Policy Attachment" style="shape=mxgraph.aws4.iam;grIcon=1;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;fillColor=#DD344C;gradientColor=none;strokeColor=none;fontFamily=Helvetica;fontSize=12" parent="5" vertex="1">
+          <mxGeometry x="330" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="23" value="Nginx Deployment" style="shape=ellipse;fillColor=#326CE5;strokeColor=#326CE5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#000000;fontFamily=Helvetica;fontSize=12" parent="6" vertex="1">
+          <mxGeometry x="30" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="24" value="Nginx Service" style="shape=rhombus;fillColor=#326CE5;strokeColor=#326CE5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#000000;fontFamily=Helvetica;fontSize=12" parent="6" vertex="1">
+          <mxGeometry x="180" y="90" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="25" value="Ingress Service" style="shape=rhombus;fillColor=#326CE5;strokeColor=#326CE5;strokeWidth=2;rounded=1;whiteSpace=wrap;html=1;verticalLabelPosition=bottom;verticalAlign=top;fontColor=#000000;fontFamily=Helvetica;fontSize=12" parent="6" vertex="1">
+          <mxGeometry x="30" y="270" width="78" height="78" as="geometry"/>
+        </mxCell>
+        <mxCell id="26" value="attached" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="7" target="8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="27" value="contains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="7" target="9">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="28" value="contains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="7" target="10">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="29" value="contains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="7" target="11">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="30" value="associated with" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="9" target="12">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="31" value="associated with" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="9" target="13">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="32" value="association target" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="10" target="12">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="33" value="association target" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="11" target="13">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="34" value="used by" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="14" target="16">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="35" value="assumed by" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="17" target="15">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="36" value="assumed by" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="18" target="16">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="37" value="hosts Kubernetes workloads" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="15" target="23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="38" value="runs pods for the deployment" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4F46E5;strokeWidth=2;endArrow=classic;endFill=1;fontColor=#4B5563;fontSize=11;labelBackgroundColor=#FFFFFF" parent="1" edge="1" source="16" target="23">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

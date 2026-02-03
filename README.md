@@ -14,7 +14,10 @@ A simple, elegant web application for generating cloud architecture diagrams fro
 - 📦 **Compact Nodes** - Small, professional frames (100x70px) with external labels
 - 🔲 **Smart Grouping** - Dotted-border containers for related resources
 - 📱 **Responsive** - Works on desktop and mobile devices
-- 🖼️ **Export** - Download diagrams as PNG images
+- 🖼️ **Multiple Export Formats**:
+  - **PNG** - High-quality raster images
+  - **SVG** - Scalable vector graphics
+  - **Draw.io** - Professional diagrams with proper AWS/Azure/K8s icons 🆕
 
 ## Quick Start 🚀
 
@@ -53,6 +56,10 @@ Open your browser to: **http://localhost:8080**
 3. View and interact with the generated diagram
 4. **Drag nodes** to manually adjust positions (grab and move!)
 5. Pan and zoom to explore your architecture
+6. **Export**:
+   - **PNG**: High-quality image for presentations
+   - **SVG**: Vector format for editing
+   - **Draw.io**: Professional diagrams with proper AWS/Azure icons 🆕
 
 ### Option 2: AI-Powered Generation (NEW! 🤖)
 
@@ -237,6 +244,40 @@ Located in `assets/icons/General/[name].svg` (flat structure):
 - AWS service names use **full names with hyphens** (e.g., `Elastic-Kubernetes-Service.svg` not `eks.svg`)
 - The AI generator automatically selects the correct category and icon based on your description
 
+## Draw.io Export 🎨 NEW!
+
+The Blueprint Generator now supports exporting to **Draw.io format** with proper cloud provider icons!
+
+### Why Draw.io Export?
+
+- ✅ **Professional Icons**: Exports AWS/Azure/Kubernetes resources with proper `mxgraph.aws4.*` shapes
+- ✅ **Editable**: Open in [draw.io](https://app.diagrams.net) and continue editing
+- ✅ **Standard Format**: Industry-standard `.drawio` files
+- ✅ **No Conversion Needed**: Direct export with correct shapes and styles
+
+### How to Export
+
+1. Load your diagram (JSON upload or AI generation)
+2. Click the **"Export Draw.io"** button in the header
+3. Open the downloaded `.drawio` file in [draw.io](https://app.diagrams.net)
+4. See your architecture with proper AWS EC2, VPC, RDS, Lambda, EKS icons! 🎉
+
+### Supported Services
+
+**AWS** (with proper mxGraph shapes):
+- Compute: EC2, Lambda, EKS, ECS, ECR
+- Networking: VPC, Internet Gateway, NAT Gateway, Load Balancers, Route 53
+- Database: RDS, DynamoDB, ElastiCache, Aurora
+- Storage: S3, EBS, EFS
+- Security: IAM, KMS, Secrets Manager, Security Groups
+- Management: CloudWatch, CloudFormation, Systems Manager
+
+**Azure**: Virtual Machines, AKS, Virtual Networks, Storage Accounts
+
+**Kubernetes**: Deployments, Services, Pods, Ingress, ConfigMaps, Secrets, Namespaces
+
+See [DRAWIO-EXPORT.md](./DRAWIO-EXPORT.md) for complete documentation.
+
 ## AI Integration Details 🤖
 
 The AI generator:
@@ -342,12 +383,14 @@ blueprintgen/
 
 ## Future Enhancements 🔮
 
-- Streaming AI responses
-- Multiple AI model support
-- Custom icon upload
-- Collaborative editing
-- Export to multiple formats (SVG, PDF)
-- Auto-save generated JSON files
+- Streaming AI responses for faster feedback
+- Multiple AI model support (Claude, GPT-4, etc.)
+- Custom icon upload and management
+- Collaborative editing with real-time sync
+- Export to PDF format
+- Auto-save and version control for generated JSON
+- Enhanced draw.io export with GCP icons
+- Multi-page architecture diagrams
 
 ## Contributing 🤝
 
